@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
     <!-- 封面 -->
@@ -41,68 +41,27 @@
     <!-- 导航目录 -->
     <nav class="nav-bar" id="navbar">
         <div class="nav-container">
-            <a href="#framework" class="nav-link">配队框架</a>
-            <a href="#operators" class="nav-link">干员推荐</a>
-            <a href="#teams" class="nav-link">实用阵容</a>
+            <a href="#" class="nav-link" data-open-page="framework">配队框架</a>
+            <a href="#" class="nav-link" data-open-page="operators">干员推荐</a>
+            <a href="#" class="nav-link" data-open-page="teams">实用阵容</a>
             <a href="#squad" class="nav-link" data-open-squad>编队模拟</a>
-            <a href="#community" class="nav-link">配队广场</a>
+            <a href="#" class="nav-link" data-open-page="community">配队广场</a>
             <a href="#atlas" class="nav-link atlas-nav-link" data-open-atlas>全干员图鉴</a>
         </div>
     </nav>
 
     <main class="container">
-        <!-- 配队框架 -->
-        <section id="framework" class="section">
-            <h2 class="section-title">
-                <span class="icon">&#9876;</span>
-                主流配队框架
-            </h2>
-            <p class="section-desc">大佬们最常用的12人队基础模板，按功能模块划分</p>
-            
-            <div class="framework-grid">
-                <div class="framework-card">
-                    <div class="card-icon vanguard">先锋</div>
-                    <h3>风投体系</h3>
-                    <p class="card-count">2-3 人</p>
-                    <p class="card-desc">快速回费，开局站场</p>
-                </div>
-                <div class="framework-card">
-                    <div class="card-icon guard">近卫</div>
-                    <h3>决战幻神</h3>
-                    <p class="card-count">1-2 人</p>
-                    <p class="card-desc">爆发输出，处理BOSS</p>
-                </div>
-                <div class="framework-card">
-                    <div class="card-icon defender">重装</div>
-                    <h3>基石/重装</h3>
-                    <p class="card-count">2-3 人</p>
-                    <p class="card-desc">扛伤阻挡，清杂挂机</p>
-                </div>
-                <div class="framework-card">
-                    <div class="card-icon sniper">狙击</div>
-                    <h3>高台输出</h3>
-                    <p class="card-count">2-3 人</p>
-                    <p class="card-desc">持续输出，对空法术</p>
-                </div>
-                <div class="framework-card">
-                    <div class="card-icon medic">医疗</div>
-                    <h3>治疗续航</h3>
-                    <p class="card-count">1-2 人</p>
-                    <p class="card-desc">治疗回复，保障生存</p>
-                </div>
-                <div class="framework-card">
-                    <div class="card-icon specialist">特种</div>
-                    <h3>机动补位</h3>
-                    <p class="card-count">0-1 人</p>
-                    <p class="card-desc">切人补漏，应急救场</p>
-                </div>
-            </div>
+                <!-- 配队框架入口 -->
+        <section id="framework-entry" class="section squad-entry-section">
+            <button class="squad-entry-card" type="button" data-open-page="framework">
+                <span class="squad-entry-kicker">点击进入</span>
+                <span class="squad-entry-title">主流配队框架</span>
+                <span class="squad-entry-desc">大佬们最常用的12人队基础模板，按先锋/近卫/重装/狙击/医疗/特种六大功能模块划分。</span>
+            </button>
         </section>
 
 
-
-
-        <!-- 编队模拟 -->
+<!-- 编队模拟 -->
         <section id="squad" class="section squad-page" hidden>
             <div class="squad-header">
                 <h2 style="font-size:1.8rem; color:var(--accent-gold);">编队模拟</h2>
@@ -165,74 +124,17 @@
             </button>
         </section>
 
-        <!-- 配队广场 -->
-        <section id="community" class="section">
-            <h2 class="section-title">
-                <span class="icon">&#128172;</span>
-                配队广场
-            </h2>
-            <p class="section-desc">分享你的独创配队，或参考其他博士的阵容思路</p>
-
-            <div class="community-tabs">
-                <button class="comm-tab active" data-comm-tab="list">热门配队</button>
-                <button class="comm-tab" data-comm-tab="publish">发布配队</button>
-                <button class="comm-tab" data-comm-tab="my">我的发布</button>
-            </div>
-
-            <!-- 热门配队列表 -->
-            <div class="comm-content active" id="comm-list">
-                <div class="community-empty" id="communityEmpty">
-                    <p>暂无玩家配队，来做第一个分享的博士吧！</p>
-                </div>
-                <div class="community-list" id="communityList"></div>
-            </div>
-
-            <!-- 发布配队表单 -->
-            <div class="comm-content" id="comm-publish">
-                <div class="publish-form">
-                    <div class="form-group">
-                        <label>配队名称</label>
-                        <input type="text" id="publishTitle" placeholder="给你的配队起个名字，如：平民剿灭挂机队" maxlength="30">
-                    </div>
-                    <div class="form-group">
-                        <label>配队描述</label>
-                        <textarea id="publishDesc" placeholder="描述一下这套配队的核心思路、使用场景、操作要点..." rows="4" maxlength="300"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>编队代码（从编队模拟页面点击"生成编队代码"复制粘贴）</label>
-                        <input type="text" id="publishCode" placeholder="例如：桃金娘:1:3|风笛:2:3|塞雷娅:1:3|玛恩纳:3:3|维什戴尔:3:3|夜莺:3:3|艾雅法拉:2:3|伊内丝:2:3|山:2:3|缄默德克萨斯:3:3|纯烬艾雅法拉:1:3|史尔特尔:3:3" maxlength="300">
-                        <p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">格式：干员名:技能:专精|干员名:技能:专精|...  也可直接粘贴游戏内分享码或纯文本干员名</p>
-                    </div>
-                    <div class="form-group">
-                        <label>适用场景（多选）</label>
-                        <div class="tag-checks">
-                            <label class="tag-check"><input type="checkbox" value="常规推图" data-scene> 常规推图</label>
-                            <label class="tag-check"><input type="checkbox" value="高难挑战" data-scene> 高难挑战</label>
-                            <label class="tag-check"><input type="checkbox" value="剿灭挂机" data-scene> 剿灭挂机</label>
-                            <label class="tag-check"><input type="checkbox" value="速刷材料" data-scene> 速刷材料</label>
-                            <label class="tag-check"><input type="checkbox" value="肉鸽集成" data-scene> 肉鸽集成</label>
-                            <label class="tag-check"><input type="checkbox" value="危机合约" data-scene> 危机合约</label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>作者昵称</label>
-                        <input type="text" id="publishAuthor" placeholder="你的昵称" maxlength="20">
-                    </div>
-                    <button type="button" class="publish-btn" id="publishBtn">发布配队</button>
-                    <p class="publish-note">数据存储在本地，仅当前设备可见。刷新页面不会丢失。</p>
-                </div>
-            </div>
-
-            <!-- 我的发布 -->
-            <div class="comm-content" id="comm-my">
-                <div class="community-empty" id="myCommunityEmpty">
-                    <p>你还没有发布过配队，快去"发布配队" tab 分享你的阵容吧！</p>
-                </div>
-                <div class="community-list" id="myCommunityList"></div>
-            </div>
+                <!-- 配队广场入口 -->
+        <section id="community-entry" class="section squad-entry-section">
+            <button class="squad-entry-card" type="button" data-open-page="community">
+                <span class="squad-entry-kicker">点击进入</span>
+                <span class="squad-entry-title">配队广场</span>
+                <span class="squad-entry-desc">分享你的独创配队，或参考其他博士的阵容思路。支持编队代码一键复制导入。</span>
+            </button>
         </section>
 
-        <!-- 全干员图鉴入口 -->
+
+<!-- 全干员图鉴入口 -->
         <section id="atlas-entry" class="section atlas-entry-section">
             <button class="atlas-entry-card" type="button" data-open-atlas>
                 <span class="atlas-entry-kicker">点击进入</span>
@@ -3660,8 +3562,88 @@
         </div>
 
 
-        <!-- 干员推荐 -->
-        <section id="operators" class="section">
+                <!-- 干员推荐入口 -->
+        <section id="operators-entry" class="section squad-entry-section">
+            <button class="squad-entry-card" type="button" data-open-page="operators">
+                <span class="squad-entry-kicker">点击进入</span>
+                <span class="squad-entry-title">强力干员推荐</span>
+                <span class="squad-entry-desc">按培养优先级排序，T0必练/T1推荐/T2可选，参考多位大佬的综合评价。</span>
+            </button>
+        </section>
+
+
+        <!-- 实用阵容入口 -->
+        <section id="teams-entry" class="section squad-entry-section">
+            <button class="squad-entry-card" type="button" data-open-page="teams">
+                <span class="squad-entry-kicker">点击进入</span>
+                <span class="squad-entry-title">实用阵容推荐</span>
+                <span class="squad-entry-desc">14套精选阵容覆盖常规推图、高难挑战、速刷挂机、剿灭、肉鸽、法蒸、深海等全部场景。</span>
+            </button>
+        </section>
+
+
+
+        <!-- Hidden Detail Pages -->
+        <section id="framework" class="section page-section" hidden>
+            <div class="page-header">
+                <h2 style="font-size:1.8rem; color:var(--accent-gold);">主流配队框架</h2>
+                <button class="atlas-back-btn" type="button" data-close-page="framework">返回首页</button>
+            </div>
+            <h2 class="section-title">
+                <span class="icon">&#9876;</span>
+                主流配队框架
+            </h2>
+            <p class="section-desc">大佬们最常用的12人队基础模板，按功能模块划分</p>
+            
+            <div class="framework-grid">
+                <div class="framework-card">
+                    <div class="card-icon vanguard">先锋</div>
+                    <h3>风投体系</h3>
+                    <p class="card-count">2-3 人</p>
+                    <p class="card-desc">快速回费，开局站场</p>
+                </div>
+                <div class="framework-card">
+                    <div class="card-icon guard">近卫</div>
+                    <h3>决战幻神</h3>
+                    <p class="card-count">1-2 人</p>
+                    <p class="card-desc">爆发输出，处理BOSS</p>
+                </div>
+                <div class="framework-card">
+                    <div class="card-icon defender">重装</div>
+                    <h3>基石/重装</h3>
+                    <p class="card-count">2-3 人</p>
+                    <p class="card-desc">扛伤阻挡，清杂挂机</p>
+                </div>
+                <div class="framework-card">
+                    <div class="card-icon sniper">狙击</div>
+                    <h3>高台输出</h3>
+                    <p class="card-count">2-3 人</p>
+                    <p class="card-desc">持续输出，对空法术</p>
+                </div>
+                <div class="framework-card">
+                    <div class="card-icon medic">医疗</div>
+                    <h3>治疗续航</h3>
+                    <p class="card-count">1-2 人</p>
+                    <p class="card-desc">治疗回复，保障生存</p>
+                </div>
+                <div class="framework-card">
+                    <div class="card-icon specialist">特种</div>
+                    <h3>机动补位</h3>
+                    <p class="card-count">0-1 人</p>
+                    <p class="card-desc">切人补漏，应急救场</p>
+                </div>
+            </div>
+        </section>
+
+
+
+
+        
+        <section id="operators" class="section page-section" hidden>
+            <div class="page-header">
+                <h2 style="font-size:1.8rem; color:var(--accent-gold);">强力干员推荐</h2>
+                <button class="atlas-back-btn" type="button" data-close-page="operators">返回首页</button>
+            </div>
             <h2 class="section-title">
                 <span class="icon">&#9733;</span>
                 各职业强力干员推荐
@@ -4054,8 +4036,12 @@
             </div>
         </section>
 
-        <!-- 实用阵容 -->
-        <section id="teams" class="section">
+        
+        <section id="teams" class="section page-section" hidden>
+            <div class="page-header">
+                <h2 style="font-size:1.8rem; color:var(--accent-gold);">实用阵容推荐</h2>
+                <button class="atlas-back-btn" type="button" data-close-page="teams">返回首页</button>
+            </div>
             <h2 class="section-title">
                 <span class="icon">&#9874;</span>
                 实用阵容推荐
@@ -4295,6 +4281,78 @@
             </div>
         </section>
 
+    
+        <section id="community" class="section page-section" hidden>
+            <div class="page-header">
+                <h2 style="font-size:1.8rem; color:var(--accent-gold);">配队广场</h2>
+                <button class="atlas-back-btn" type="button" data-close-page="community">返回首页</button>
+            </div>
+            <h2 class="section-title">
+                <span class="icon">&#128172;</span>
+                配队广场
+            </h2>
+            <p class="section-desc">分享你的独创配队，或参考其他博士的阵容思路</p>
+
+            <div class="community-tabs">
+                <button class="comm-tab active" data-comm-tab="list">热门配队</button>
+                <button class="comm-tab" data-comm-tab="publish">发布配队</button>
+                <button class="comm-tab" data-comm-tab="my">我的发布</button>
+            </div>
+
+            <!-- 热门配队列表 -->
+            <div class="comm-content active" id="comm-list">
+                <div class="community-empty" id="communityEmpty">
+                    <p>暂无玩家配队，来做第一个分享的博士吧！</p>
+                </div>
+                <div class="community-list" id="communityList"></div>
+            </div>
+
+            <!-- 发布配队表单 -->
+            <div class="comm-content" id="comm-publish">
+                <div class="publish-form">
+                    <div class="form-group">
+                        <label>配队名称</label>
+                        <input type="text" id="publishTitle" placeholder="给你的配队起个名字，如：平民剿灭挂机队" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>配队描述</label>
+                        <textarea id="publishDesc" placeholder="描述一下这套配队的核心思路、使用场景、操作要点..." rows="4" maxlength="300"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>编队代码（从编队模拟页面点击"生成编队代码"复制粘贴）</label>
+                        <input type="text" id="publishCode" placeholder="例如：桃金娘:1:3|风笛:2:3|塞雷娅:1:3|玛恩纳:3:3|维什戴尔:3:3|夜莺:3:3|艾雅法拉:2:3|伊内丝:2:3|山:2:3|缄默德克萨斯:3:3|纯烬艾雅法拉:1:3|史尔特尔:3:3" maxlength="300">
+                        <p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">格式：干员名:技能:专精|干员名:技能:专精|...  也可直接粘贴游戏内分享码或纯文本干员名</p>
+                    </div>
+                    <div class="form-group">
+                        <label>适用场景（多选）</label>
+                        <div class="tag-checks">
+                            <label class="tag-check"><input type="checkbox" value="常规推图" data-scene> 常规推图</label>
+                            <label class="tag-check"><input type="checkbox" value="高难挑战" data-scene> 高难挑战</label>
+                            <label class="tag-check"><input type="checkbox" value="剿灭挂机" data-scene> 剿灭挂机</label>
+                            <label class="tag-check"><input type="checkbox" value="速刷材料" data-scene> 速刷材料</label>
+                            <label class="tag-check"><input type="checkbox" value="肉鸽集成" data-scene> 肉鸽集成</label>
+                            <label class="tag-check"><input type="checkbox" value="危机合约" data-scene> 危机合约</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>作者昵称</label>
+                        <input type="text" id="publishAuthor" placeholder="你的昵称" maxlength="20">
+                    </div>
+                    <button type="button" class="publish-btn" id="publishBtn">发布配队</button>
+                    <p class="publish-note">数据存储在本地，仅当前设备可见。刷新页面不会丢失。</p>
+                </div>
+            </div>
+
+            <!-- 我的发布 -->
+            <div class="comm-content" id="comm-my">
+                <div class="community-empty" id="myCommunityEmpty">
+                    <p>你还没有发布过配队，快去"发布配队" tab 分享你的阵容吧！</p>
+                </div>
+                <div class="community-list" id="myCommunityList"></div>
+            </div>
+        </section>
+
+        
     </main>
 
     <!-- 干员选择弹窗 -->
@@ -4405,8 +4463,8 @@
     </footer>
 
     <script src="operator_modules.js"></script>
-    <script src="operator_skills.js?v=9"></script>
-    <script src="script.js?v=9"></script>
+    <script src="operator_skills.js?v=10"></script>
+    <script src="script.js?v=10"></script>
 </body>
 </html>
 

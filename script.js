@@ -172,6 +172,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // ========== 通用页面切换 ==========
+    function openPage(pageId) {
+        document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
+        const page = document.getElementById(pageId);
+        if (page) {
+            page.removeAttribute('hidden');
+            document.body.classList.add('page-open');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+    }
+
+    function closePage(pageId) {
+        const page = document.getElementById(pageId);
+        if (page) page.setAttribute('hidden', '');
+        // Check if any page is still open
+        const anyOpen = document.querySelector('.page-section:not([hidden])');
+        if (!anyOpen) document.body.classList.remove('page-open');
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    document.querySelectorAll('[data-open-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pageId = this.getAttribute('data-open-page');
+            openPage(pageId);
+        });
+    });
+
+    document.querySelectorAll('[data-close-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const pageId = this.getAttribute('data-close-page');
+            closePage(pageId);
+        });
+    });
+
     // 滚动时高亮当前导航项
     function highlightNavOnScroll() {
         let current = '';
@@ -2819,6 +2853,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const emptyEl = document.getElementById(containerId === 'communityList' ? 'communityEmpty' : 'myCommunityEmpty');
         if (!container) return;
         container.innerHTML = '';
+        // Use vertical list style for community page
+        container.className = 'community-list-vertical';
 
         if (!squads.length) {
             if (emptyEl) emptyEl.style.display = 'block';
@@ -2828,22 +2864,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
         squads.forEach((squad, idx) => {
             const card = document.createElement('div');
-            card.className = 'community-card';
+            card.className = 'comm-card-vertical';
             const scenesHtml = (squad.scenes || []).map(s => `<span class="comm-scene-tag">${escapeHtml(s)}</span>`).join('');
             const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
-            const codePreview = squad.code ? escapeHtml(squad.code.substring(0, 60)) + (squad.code.length > 60 ? '...' : '') : '';
+            const codePreview = squad.code ? escapeHtml(squad.code.substring(0, 80)) + (squad.code.length > 80 ? '...' : '') : '';
+            // Parse ops from code to show avatar initials
+            let ops = [];
+            if (squad.code) {
+                ops = squad.code.split(/[|]/).map(p => p.split(':')[0]).filter(Boolean).slice(0, 8);
+            }
+            const opsHtml = ops.map(o => `<span class="comm-card-v-op">${escapeHtml(o)}</span>`).join('');
+            // Avatar uses first char of title or first op name
+            const avatarChar = (ops[0] || squad.title || '队').charAt(0);
             card.innerHTML = `
-                <div class="comm-card-header">
-                    <h4 class="comm-card-title">${escapeHtml(squad.title)}</h4>
-                    <span class="comm-card-author">${escapeHtml(squad.author || '匿名博士')} · ${dateStr}</span>
-                </div>
-                ${scenesHtml ? `<div class="comm-card-scenes">${scenesHtml}</div>` : ''}
-                <div class="comm-card-desc">${escapeHtml(squad.desc)}</div>
-                ${codePreview ? `<div class="comm-card-code"><code>${codePreview}</code></div>` : ''}
-                <div class="comm-card-actions">
-                    <button data-like-idx="${idx}">&#128077; 点赞 (${squad.likes || 0})</button>
-                    ${squad.code ? `<button data-copy-code="${idx}">&#128203; 复制编队代码</button>` : ''}
-                    ${showDelete ? `<button data-del-idx="${idx}" style="color:#f87171">删除</button>` : ''}
+                <div class="comm-card-avatar">${escapeHtml(avatarChar)}</div>
+                <div class="comm-card-body">
+                    <h4 class="comm-card-v-title">${escapeHtml(squad.title)}</h4>
+                    <div class="comm-card-v-meta">${escapeHtml(squad.author || '匿名博士')} · ${dateStr}</div>
+                    ${scenesHtml ? `<div class="comm-card-scenes">${scenesHtml}</div>` : ''}
+                    <div class="comm-card-v-desc">${escapeHtml(squad.desc)}</div>
+                    ${opsHtml ? `<div class="comm-card-v-ops">${opsHtml}</div>` : ''}
+                    ${codePreview ? `<div class="comm-card-v-code"><code>${codePreview}</code></div>` : ''}
+                    <div class="comm-card-v-actions">
+                        <button data-like-idx="${idx}">&#128077; 点赞 (${squad.likes || 0})</button>
+                        ${squad.code ? `<button data-copy-code="${idx}">&#128203; 复制编队代码</button>` : ''}
+                        ${showDelete ? `<button data-del-idx="${idx}" style="color:#f87171">删除</button>` : ''}
+                    </div>
                 </div>
             `;
             container.appendChild(card);
