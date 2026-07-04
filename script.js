@@ -3135,7 +3135,8 @@ document.addEventListener('DOMContentLoaded', function() {
             commContents.forEach(c => c.classList.remove('active'));
             this.classList.add('active');
             document.getElementById('comm-' + tabName).classList.add('active');
-            if (tabName === 'list' || tabName === 'my' || tabName === 'manage') refreshCommunity();
+            if (tabName === 'list' || tabName === 'my') refreshCommunity();
+            if (tabName === 'manage') renderManageList();
         });
     });
 
