@@ -3125,20 +3125,21 @@ document.addEventListener('DOMContentLoaded', function() {
         renderCommunityCards('myCommunityList', mine, true);
     }
 
-    // 配队广场tab切换
-    const commTabs = document.querySelectorAll('.comm-tab');
-    const commContents = document.querySelectorAll('.comm-content');
-    commTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.getAttribute('data-comm-tab');
-            commTabs.forEach(t => t.classList.remove('active'));
-            commContents.forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
+    // 配队广场tab切换（使用事件委托，支持动态显示的tab）
+    const tabsContainer = document.querySelector('.community-tabs');
+    if (tabsContainer) {
+        tabsContainer.addEventListener('click', function(e) {
+            const tab = e.target.closest('.comm-tab');
+            if (!tab) return;
+            const tabName = tab.dataset.commTab;
+            if (!tabName) return;
+            tabsContainer.querySelectorAll('.comm-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.comm-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
             const contentEl = document.getElementById('comm-' + tabName);
             if (contentEl) contentEl.classList.add('active');
             if (tabName === 'list' || tabName === 'my') refreshCommunity();
             if (tabName === 'manage') {
-                // 直接内联渲染管理删除列表，不依赖外部函数
                 const allSquads = loadCommunitySquads();
                 const manageList = document.getElementById('manageCommunityList');
                 if (manageList) {
@@ -3164,7 +3165,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-    });
+    }
 
     // 发布按钮
     const publishBtn = document.getElementById('publishBtn');
