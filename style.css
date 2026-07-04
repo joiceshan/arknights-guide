@@ -3566,13 +3566,29 @@ body.page-open {
     overflow-x: hidden;
 }
 
-body.page-open .container > .section:not(.page-section):not(#squad):not(#atlas),
+body.page-open .header,
+body.page-open .nav-bar,
+body.page-open .container > .squad-entry-section,
+body.page-open .container > .atlas-entry-section,
+body.page-open .container > .section:not(.page-section):not(.squad-page):not(.atlas-page),
 body.page-open .footer {
-    display: none;
+    display: none !important;
 }
 
-body.page-open .page-section {
+body.page-open .page-section[hidden] {
+    display: none !important;
+}
+
+body.page-open .page-section:not([hidden]) {
     display: block !important;
+}
+
+/* 确保page-open时隐藏所有非page的section和入口卡片 */
+body.page-open #squad,
+body.page-open #atlas,
+body.page-open #squad-entry,
+body.page-open #atlas-entry {
+    display: none !important;
 }
 
 /* 配队广场 - 竖向长条列表 */
@@ -3701,6 +3717,29 @@ body.page-open .page-section {
     color: var(--accent-gold);
     font-size: 0.78rem;
     font-family: 'Consolas', monospace;
+}
+
+/* 干员头像行 */
+.comm-card-avatars {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.comm-avatar-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.15);
 }
 
 @media (max-width: 768px) {

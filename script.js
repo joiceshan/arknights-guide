@@ -174,7 +174,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ========== 通用页面切换 ==========
     function openPage(pageId) {
+        // 先关闭所有 page-section
         document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
+        // 隐藏 squad/atlas 全屏页面（如果打开的话）
+        document.body.classList.remove('squad-open', 'atlas-open');
+        const squadPage = document.getElementById('squad');
+        const atlasPage = document.getElementById('atlas');
+        if (squadPage) squadPage.setAttribute('hidden', '');
+        if (atlasPage) atlasPage.setAttribute('hidden', '');
+        // 隐藏squad和atlas入口
+        const squadEntry = document.getElementById('squad-entry');
+        const atlasEntry = document.getElementById('atlas-entry');
+        if (squadEntry) squadEntry.style.display = 'none';
+        if (atlasEntry) atlasEntry.style.display = 'none';
+
         const page = document.getElementById(pageId);
         if (page) {
             page.removeAttribute('hidden');
@@ -186,9 +199,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function closePage(pageId) {
         const page = document.getElementById(pageId);
         if (page) page.setAttribute('hidden', '');
-        // Check if any page is still open
-        const anyOpen = document.querySelector('.page-section:not([hidden])');
-        if (!anyOpen) document.body.classList.remove('page-open');
+        document.body.classList.remove('page-open');
+        // 恢复入口卡片
+        const squadEntry = document.getElementById('squad-entry');
+        const atlasEntry = document.getElementById('atlas-entry');
+        if (squadEntry) squadEntry.style.display = '';
+        if (atlasEntry) atlasEntry.style.display = '';
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
@@ -2615,7 +2631,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const text = importTextarea.value.trim();
             if (!text) return;
             try {
-                const data = JSON.parse(text);
+                // 尝试JSON格式
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    // 如果不是JSON，尝试编队代码格式 name:skill:mastery|name:skill:mastery
+                    if (text.includes('|') || text.includes(':')) {
+                        data = parseSquadCode(text).map(op => ({
+                            name: op.name,
+                            skill: op.skill || 1,
+                            level: 90,
+                            mastery: op.mastery || 0,
+                            potential: 1,
+                            module: '无'
+                        }));
+                    } else {
+                        // 纯文本干员名，用分隔符拆分
+                        data = text.split(/[,，、\s\n]+/).filter(Boolean).map(name => ({
+                            name: name.trim(),
+                            skill: 1,
+                            level: 90,
+                            mastery: 0,
+                            potential: 1,
+                            module: '无'
+                        }));
+                    }
+                }
                 if (!Array.isArray(data)) throw new Error('格式错误');
                 const newSquad = new Array(12).fill(null);
                 const importedNames = new Set();
@@ -2643,7 +2685,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.style.overflow = '';
                 alert('编队导入成功！');
             } catch (e) {
-                alert('导入失败：JSON 格式错误');
+                alert('导入失败：格式不正确。请粘贴JSON数组、编队代码（干员名:技能:专精|...）或纯文本干员名');
             }
         });
     }
@@ -2659,7 +2701,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function parseSquadCode(code) {
         if (!code || !code.trim()) return [];
-        return code.trim().split(/[|\n]/).map(line => {
+        code = code.trim();
+        // 先尝试JSON数组格式
+        try {
+            const arr = JSON.parse(code);
+            if (Array.isArray(arr)) {
+                return arr.map(item => ({
+                    name: item.name || '',
+                    skill: item.skill || 1,
+                    mastery: item.mastery || 0
+                })).filter(op => op.name);
+            }
+        } catch {}
+        // 编队代码格式 name:skill:mastery|name:skill:mastery
+        return code.split(/[|\n]/).map(line => {
             const [name, skill, mastery] = line.trim().split(':');
             if (!name) return null;
             return {
@@ -2867,26 +2922,32 @@ document.addEventListener('DOMContentLoaded', function() {
             card.className = 'comm-card-vertical';
             const scenesHtml = (squad.scenes || []).map(s => `<span class="comm-scene-tag">${escapeHtml(s)}</span>`).join('');
             const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
-            const codePreview = squad.code ? escapeHtml(squad.code.substring(0, 80)) + (squad.code.length > 80 ? '...' : '') : '';
-            // Parse ops from code to show avatar initials
+            // Parse ops from code (supports both JSON and name:skill:mastery| format)
             let ops = [];
             if (squad.code) {
-                ops = squad.code.split(/[|]/).map(p => p.split(':')[0]).filter(Boolean).slice(0, 8);
+                ops = parseSquadCode(squad.code).map(op => op.name).filter(Boolean);
+            } else if (squad.ops) {
+                ops = squad.ops;
             }
             const opsHtml = ops.map(o => `<span class="comm-card-v-op">${escapeHtml(o)}</span>`).join('');
-            // Avatar uses first char of title or first op name
-            const avatarChar = (ops[0] || squad.title || '队').charAt(0);
+            // Avatar row: show first 6 operator initials in colored circles
+            const avatarOps = ops.slice(0, 6);
+            const avatarHtml = avatarOps.length > 0
+                ? `<div class="comm-card-avatars">${avatarOps.map((o, i) => {
+                    const colors = ['#e8883c','#5eb7ff','#d44','#4caf50','#c49b30','#9c27b0'];
+                    return `<div class="comm-avatar-sm" style="background:${colors[i % colors.length]}">${escapeHtml(o.charAt(0))}</div>`;
+                }).join('')}${ops.length > 6 ? `<div class="comm-avatar-sm" style="background:#555">+${ops.length-6}</div>` : ''}</div>`
+                : '';
             card.innerHTML = `
-                <div class="comm-card-avatar">${escapeHtml(avatarChar)}</div>
                 <div class="comm-card-body">
                     <h4 class="comm-card-v-title">${escapeHtml(squad.title)}</h4>
                     <div class="comm-card-v-meta">${escapeHtml(squad.author || '匿名博士')} · ${dateStr}</div>
                     ${scenesHtml ? `<div class="comm-card-scenes">${scenesHtml}</div>` : ''}
-                    <div class="comm-card-v-desc">${escapeHtml(squad.desc)}</div>
+                    ${avatarHtml}
                     ${opsHtml ? `<div class="comm-card-v-ops">${opsHtml}</div>` : ''}
-                    ${codePreview ? `<div class="comm-card-v-code"><code>${codePreview}</code></div>` : ''}
+                    <div class="comm-card-v-desc">${escapeHtml(squad.desc)}</div>
                     <div class="comm-card-v-actions">
-                        <button data-like-idx="${idx}">&#128077; 点赞 (${squad.likes || 0})</button>
+                        <button data-like-idx="${idx}">&#128077; ${isLiked(idx) ? '已点赞' : '点赞'} (${squad.likes || 0})</button>
                         ${squad.code ? `<button data-copy-code="${idx}">&#128203; 复制编队代码</button>` : ''}
                         ${showDelete ? `<button data-del-idx="${idx}" style="color:#f87171">删除</button>` : ''}
                     </div>
@@ -2943,7 +3004,8 @@ document.addEventListener('DOMContentLoaded', function() {
             squads.unshift({
                 title, desc, code, scenes, author,
                 time: Date.now(),
-                likes: 0
+                likes: 0,
+                likedBy: []
             });
             saveCommunitySquads(squads);
 
@@ -2965,13 +3027,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 点赞/复制/删除事件委托
+    const LIKED_KEY = 'arknights_liked_ids';
+    function getLikedIds() {
+        try { return JSON.parse(localStorage.getItem(LIKED_KEY)) || []; }
+        catch { return []; }
+    }
+    function isLiked(idx) {
+        return getLikedIds().includes(String(idx));
+    }
+
     document.getElementById('communityList')?.addEventListener('click', function(e) {
         const likeBtn = e.target.closest('[data-like-idx]');
         if (likeBtn) {
-            const idx = parseInt(likeBtn.getAttribute('data-like-idx'));
+            const idx = String(likeBtn.getAttribute('data-like-idx'));
             const squads = loadCommunitySquads();
             if (squads[idx]) {
-                squads[idx].likes = (squads[idx].likes || 0) + 1;
+                let likedIds = getLikedIds();
+                if (likedIds.includes(idx)) {
+                    // 取消点赞
+                    likedIds = likedIds.filter(id => id !== idx);
+                    squads[idx].likes = Math.max(0, (squads[idx].likes || 0) - 1);
+                } else {
+                    // 点赞
+                    likedIds.push(idx);
+                    squads[idx].likes = (squads[idx].likes || 0) + 1;
+                }
+                localStorage.setItem(LIKED_KEY, JSON.stringify(likedIds));
                 saveCommunitySquads(squads);
                 refreshCommunity();
             }
