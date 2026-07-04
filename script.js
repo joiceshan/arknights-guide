@@ -101,18 +101,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // 阵容标签页切换
     const tabBtns = document.querySelectorAll('.tab-btn');
     const teamContents = document.querySelectorAll('.team-content');
-    
+    const teamMoreBtn = document.getElementById('teamMoreBtn');
+    const teamDropdown = document.getElementById('teamDropdown');
+
     tabBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const tabId = this.getAttribute('data-tab');
-            
-            // 移除所有active类
+
+            // "更多"按钮只负责展开/收起下拉菜单
+            if (this.id === 'teamMoreBtn') {
+                if (teamDropdown) {
+                    teamDropdown.hidden = !teamDropdown.hidden;
+                    this.innerHTML = teamDropdown.hidden ? '更多 &#9662;' : '更多 &#9652;';
+                }
+                return;
+            }
+
+            // 点击下拉菜单中的tab时，先收起下拉菜单
+            if (teamDropdown && !teamDropdown.hidden) {
+                teamDropdown.hidden = true;
+                if (teamMoreBtn) teamMoreBtn.innerHTML = '更多 &#9662;';
+            }
+
+            // 移除所有active类（主tab和下拉菜单中的tab）
             tabBtns.forEach(b => b.classList.remove('active'));
             teamContents.forEach(c => c.classList.remove('active'));
-            
+
             // 添加active类到当前选中项
             this.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            if (tabId && document.getElementById(tabId)) {
+                document.getElementById(tabId).classList.add('active');
+            }
         });
     });
     
@@ -1075,6 +1094,17 @@ document.addEventListener('DOMContentLoaded', function() {
         ].join(' ');
     }
 
+    // 识别有治疗/回复能力的干员（含非医疗职业）
+    const HEALING_KEYWORDS = ['治疗', '恢复友方', '回复友方', '生命值', '急救', '药物配置', '回血', '地块回血', '缓慢恢复', '每秒恢复', '同葬无光', '先贤化身', '天马光环', '战斗之歌', '狐火渺然'];
+    const HEALING_OPERATOR_NAMES = ['塞雷娅', '黍', '浊心斯卡蒂', '红蒂', '瑕光', '临光', '斑点', '古米', '安洁莉娜', '空', '铃兰'];
+    function isHealingOperator(member) {
+        if (member.op.class === '医疗') return true;
+        const text = getMemberText(member);
+        if (hasAnyText(text, HEALING_KEYWORDS)) return true;
+        if (HEALING_OPERATOR_NAMES.includes(member.name)) return true;
+        return false;
+    }
+
     function buildCapabilityProfile(members) {
         const profile = {
             cost: 0,
@@ -1099,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const weight = rarityBonus * masteryBonus * moduleBonus;
 
             if (member.op.class === '先锋' || hasAnyText(text, ['费用回复', '部署费用', '获得', '爆费'])) profile.cost += 1.6 * weight;
-            if (member.op.class === '医疗' || hasAnyText(text, ['治疗', '恢复友方', '回复友方', '生命值'])) profile.healing += 1.7 * weight;
+            if (isHealingOperator(member) || hasAnyText(text, ['治疗', '恢复友方', '回复友方', '生命值'])) profile.healing += 1.7 * weight;
             if (member.op.class === '狙击' || hasAnyText(text, ['优先攻击空中', '空中单位', '对空', '飞行'])) profile.antiAir += 1.4 * weight;
             if (['近卫', '狙击', '重装', '特种', '先锋'].includes(member.op.class) || hasAnyText(text, ['物理伤害', '攻击力'])) profile.physical += 0.9 * weight;
             if (member.op.class === '术师' || hasAnyText(text, ['法术伤害', '法术抗性', '元素损伤', '元素伤害'])) profile.arts += 1.4 * weight;
@@ -1167,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const hardPenalty =
             (members.length < 12 ? (12 - members.length) * 3.8 : 0) +
             ((classCount['先锋'] || 0) === 0 ? 10 : 0) +
-            ((classCount['医疗'] || 0) === 0 ? 9 : 0) +
+            (members.filter(m => isHealingOperator(m)).length === 0 ? 9 : 0) +
             ((profile.antiAir < 2.4) ? 7 : 0) +
             ((profile.arts < 2.6) ? 6 : 0) +
             ((profile.survival < 2.8) ? 7 : 0) +
@@ -1274,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 0);
         let penalty = members.length < 12 ? (12 - members.length) * 4.5 : 0;
         if ((classCount['先锋'] || 0) === 0) penalty += mode.key === 'hard' ? 9 : 13;
-        if ((classCount['医疗'] || 0) === 0) penalty += mode.key === 'roguelike' ? 8 : 12;
+        if (members.filter(m => isHealingOperator(m)).length === 0) penalty += mode.key === 'roguelike' ? 8 : 12;
         if (profile.antiAir < mode.targets.antiAir * 0.62) penalty += mode.key === 'annihilation' ? 12 : 9;
         if (profile.arts < mode.targets.arts * 0.62) penalty += mode.key === 'hard' ? 11 : 8;
         if (profile.survival < mode.targets.survival * 0.62) penalty += 10;
@@ -1300,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const addBasicRisks = () => {
             if ((classCount['先锋'] || 0) === 0) risks.push('硬伤：没有先锋，开局节奏靠硬等费用，前压图会非常难看。');
-            if ((classCount['医疗'] || 0) === 0) risks.push('硬伤：没有医疗，除非全队靠速杀和自回血，否则容错率接近于零。');
+            if (members.filter(m => isHealingOperator(m)).length === 0) risks.push('硬伤：没有治疗手段，除非全队靠速杀和自回血，否则容错率接近于零。');
             if (members.length < 12) risks.push(`编队未满：当前只有${members.length}人，少一个位置就是少一层保险，不要拿"灵活"当借口。`);
         };
 
@@ -1488,13 +1518,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const t = getMemberText(m);
             return m.op.class === '先锋' || hasAnyText(t, ['费用回复', '部署费用']);
         });
-        const healOps = members.filter(m => m.op.class === '医疗' || hasAnyText(getMemberText(m), ['治疗', '恢复友方']));
+        const healOps = members.filter(m => isHealingOperator(m));
         const tankOps = members.filter(m => m.op.class === '重装' || hasAnyText(getMemberText(m), ['防护', '护盾', '阻挡']));
         const dpsOps = members.filter(m => ['近卫', '狙击', '术师', '特种'].includes(m.op.class));
         const supportOps = members.filter(m => m.op.class === '辅助');
         const specialOps = members.filter(m => m.op.class === '特种');
         const costNames = costOps.map(m => m.name).join('、') || '无先锋';
-        const healNames = healOps.map(m => m.name).join('、') || '无医疗';
+        const healNames = healOps.map(m => m.name).join('、') || '无治疗';
         const tankNames = tankOps.map(m => m.name).join('、') || '无重装';
         const dpsNames = dpsOps.slice(0, 3).map(m => m.name).join('、') || '无输出';
         const supportNames = supportOps.map(m => m.name).join('、') || '无辅助';
@@ -1626,20 +1656,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // 医疗检查
-        const medics = members.filter(m => m.op.class === '医疗');
-        if (medics.length === 0) {
+        // 治疗检查（含非医疗治疗干员如塞雷娅、黍、红蒂等）
+        const healers = members.filter(m => isHealingOperator(m));
+        if (healers.length === 0) {
             adjustments.push({
                 type: 'add',
-                title: '必须补充医疗',
-                desc: '没有医疗意味着前排全靠自回血和硬吃，容错率极低。建议至少带一个群奶或单奶。',
+                title: '必须补充治疗手段',
+                desc: '没有治疗意味着前排全靠自回血和硬吃，容错率极低。建议至少带一个医疗或奶盾（如塞雷娅、黍）。',
                 impact: '致命'
             });
-        } else if (medics.length === 1 && totalOps >= 10) {
+        } else if (healers.length === 1 && totalOps >= 10) {
             adjustments.push({
                 type: 'add',
-                title: '建议补充第二个医疗',
-                desc: `只有一个${medics[0].name}，如果她技能在冷却或被控制，前排直接裸奔。建议补一个不同机制的治疗（比如单奶+群奶组合）。`,
+                title: '建议补充第二个治疗',
+                desc: `只有一个${healers[0].name}提供治疗，如果她技能在冷却或被控制，前排直接裸奔。建议补一个不同机制的治疗（比如单奶+群奶组合，或奶盾+医疗组合）。`,
                 impact: '中'
             });
         }
@@ -2715,4 +2745,147 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     console.log('编队模拟模块已加载');
+
+    // ========== 配队广场 ==========
+    const COMMUNITY_KEY = 'arknights_community_squads';
+
+    function loadCommunitySquads() {
+        try { return JSON.parse(localStorage.getItem(COMMUNITY_KEY)) || []; }
+        catch (e) { return []; }
+    }
+
+    function saveCommunitySquads(squads) {
+        localStorage.setItem(COMMUNITY_KEY, JSON.stringify(squads));
+    }
+
+    function renderCommunityCards(containerId, squads, showDelete) {
+        const container = document.getElementById(containerId);
+        const emptyEl = document.getElementById(containerId === 'communityList' ? 'communityEmpty' : 'myCommunityEmpty');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (!squads.length) {
+            if (emptyEl) emptyEl.style.display = 'block';
+            return;
+        }
+        if (emptyEl) emptyEl.style.display = 'none';
+
+        squads.forEach((squad, idx) => {
+            const card = document.createElement('div');
+            card.className = 'community-card';
+            const scenesHtml = (squad.scenes || []).map(s => `<span class="comm-scene-tag">${escapeHtml(s)}</span>`).join('');
+            const opsHtml = (squad.ops || []).map(o => `<span class="comm-op-tag">${escapeHtml(o)}</span>`).join('');
+            const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
+            card.innerHTML = `
+                <div class="comm-card-header">
+                    <h4 class="comm-card-title">${escapeHtml(squad.title)}</h4>
+                    <span class="comm-card-author">${escapeHtml(squad.author || '匿名博士')} · ${dateStr}</span>
+                </div>
+                ${scenesHtml ? `<div class="comm-card-scenes">${scenesHtml}</div>` : ''}
+                <div class="comm-card-desc">${escapeHtml(squad.desc)}</div>
+                <div class="comm-card-ops">${opsHtml}</div>
+                <div class="comm-card-actions">
+                    <button data-like-idx="${idx}">&#128077; 点赞 (${squad.likes || 0})</button>
+                    ${showDelete ? `<button data-del-idx="${idx}" style="color:#f87171">删除</button>` : ''}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function refreshCommunity() {
+        const all = loadCommunitySquads();
+        renderCommunityCards('communityList', all, false);
+        const myAuthor = document.getElementById('publishAuthor')?.value?.trim() || '';
+        const mine = myAuthor ? all.filter(s => s.author === myAuthor) : [];
+        renderCommunityCards('myCommunityList', mine, true);
+    }
+
+    // 配队广场tab切换
+    const commTabs = document.querySelectorAll('.comm-tab');
+    const commContents = document.querySelectorAll('.comm-content');
+    commTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-comm-tab');
+            commTabs.forEach(t => t.classList.remove('active'));
+            commContents.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('comm-' + tabName).classList.add('active');
+            if (tabName === 'list' || tabName === 'my') refreshCommunity();
+        });
+    });
+
+    // 发布按钮
+    const publishBtn = document.getElementById('publishBtn');
+    if (publishBtn) {
+        publishBtn.addEventListener('click', function() {
+            const title = document.getElementById('publishTitle')?.value?.trim();
+            const desc = document.getElementById('publishDesc')?.value?.trim();
+            const opsStr = document.getElementById('publishOps')?.value?.trim();
+            const author = document.getElementById('publishAuthor')?.value?.trim() || '匿名博士';
+            const scenes = Array.from(document.querySelectorAll('input[data-scene]:checked')).map(cb => cb.value);
+
+            if (!title) { alert('请填写配队名称'); return; }
+            if (!opsStr) { alert('请填写干员列表'); return; }
+
+            const ops = opsStr.split(/[,，、\s]+/).filter(Boolean);
+            if (ops.length > 12) ops.splice(12);
+
+            const squads = loadCommunitySquads();
+            squads.unshift({
+                title, desc, ops, scenes, author,
+                time: Date.now(),
+                likes: 0
+            });
+            saveCommunitySquads(squads);
+
+            // 清空表单
+            document.getElementById('publishTitle').value = '';
+            document.getElementById('publishDesc').value = '';
+            document.getElementById('publishOps').value = '';
+            document.querySelectorAll('input[data-scene]').forEach(cb => cb.checked = false);
+
+            alert('发布成功！');
+            refreshCommunity();
+
+            // 切换到列表tab
+            commTabs.forEach(t => t.classList.remove('active'));
+            commContents.forEach(c => c.classList.remove('active'));
+            document.querySelector('[data-comm-tab="list"]').classList.add('active');
+            document.getElementById('comm-list').classList.add('active');
+        });
+    }
+
+    // 点赞/删除事件委托
+    document.getElementById('communityList')?.addEventListener('click', function(e) {
+        const likeBtn = e.target.closest('[data-like-idx]');
+        if (likeBtn) {
+            const idx = parseInt(likeBtn.getAttribute('data-like-idx'));
+            const squads = loadCommunitySquads();
+            if (squads[idx]) {
+                squads[idx].likes = (squads[idx].likes || 0) + 1;
+                saveCommunitySquads(squads);
+                refreshCommunity();
+            }
+        }
+    });
+
+    document.getElementById('myCommunityList')?.addEventListener('click', function(e) {
+        const delBtn = e.target.closest('[data-del-idx]');
+        if (delBtn) {
+            if (!confirm('确定删除这条配队吗？')) return;
+            const idx = parseInt(delBtn.getAttribute('data-del-idx'));
+            const squads = loadCommunitySquads();
+            const myAuthor = document.getElementById('publishAuthor')?.value?.trim() || '';
+            const mine = myAuthor ? squads.filter(s => s.author === myAuthor) : [];
+            const toDel = mine[idx];
+            if (toDel) {
+                const newSquads = squads.filter(s => s !== toDel);
+                saveCommunitySquads(newSquads);
+                refreshCommunity();
+            }
+        }
+    });
+
+    refreshCommunity();
 });

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
     <!-- 封面 -->
@@ -44,8 +44,8 @@
             <a href="#framework" class="nav-link">配队框架</a>
             <a href="#operators" class="nav-link">干员推荐</a>
             <a href="#teams" class="nav-link">实用阵容</a>
-            <a href="#tips" class="nav-link">萌新建议</a>
             <a href="#squad" class="nav-link" data-open-squad>编队模拟</a>
+            <a href="#community" class="nav-link">配队广场</a>
             <a href="#atlas" class="nav-link atlas-nav-link" data-open-atlas>全干员图鉴</a>
         </div>
     </nav>
@@ -162,6 +162,72 @@
                 <span class="squad-entry-title">编队模拟</span>
                 <span class="squad-entry-desc">自选12人编队，配置技能、等级、专精与潜能，模拟你的理想队伍。</span>
             </button>
+        </section>
+
+        <!-- 配队广场 -->
+        <section id="community" class="section">
+            <h2 class="section-title">
+                <span class="icon">&#128172;</span>
+                配队广场
+            </h2>
+            <p class="section-desc">分享你的独创配队，或参考其他博士的阵容思路</p>
+
+            <div class="community-tabs">
+                <button class="comm-tab active" data-comm-tab="list">热门配队</button>
+                <button class="comm-tab" data-comm-tab="publish">发布配队</button>
+                <button class="comm-tab" data-comm-tab="my">我的发布</button>
+            </div>
+
+            <!-- 热门配队列表 -->
+            <div class="comm-content active" id="comm-list">
+                <div class="community-empty" id="communityEmpty">
+                    <p>暂无玩家配队，来做第一个分享的博士吧！</p>
+                </div>
+                <div class="community-list" id="communityList"></div>
+            </div>
+
+            <!-- 发布配队表单 -->
+            <div class="comm-content" id="comm-publish">
+                <div class="publish-form">
+                    <div class="form-group">
+                        <label>配队名称</label>
+                        <input type="text" id="publishTitle" placeholder="给你的配队起个名字，如：平民剿灭挂机队" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>配队描述</label>
+                        <textarea id="publishDesc" placeholder="描述一下这套配队的核心思路、使用场景、操作要点..." rows="4" maxlength="300"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>12人干员列表（用顿号、逗号或空格分隔）</label>
+                        <input type="text" id="publishOps" placeholder="例如：桃金娘, 风笛, 塞雷娅, 玛恩纳, 维什戴尔, 夜莺, 艾雅法拉, 伊内丝, 山, 缄默德克萨斯, 纯烬艾雅法拉, 史尔特尔" maxlength="200">
+                    </div>
+                    <div class="form-group">
+                        <label>适用场景（多选）</label>
+                        <div class="tag-checks">
+                            <label class="tag-check"><input type="checkbox" value="常规推图" data-scene> 常规推图</label>
+                            <label class="tag-check"><input type="checkbox" value="高难挑战" data-scene> 高难挑战</label>
+                            <label class="tag-check"><input type="checkbox" value="剿灭挂机" data-scene> 剿灭挂机</label>
+                            <label class="tag-check"><input type="checkbox" value="速刷材料" data-scene> 速刷材料</label>
+                            <label class="tag-check"><input type="checkbox" value="肉鸽集成" data-scene> 肉鸽集成</label>
+                            <label class="tag-check"><input type="checkbox" value="危机合约" data-scene> 危机合约</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>作者昵称</label>
+                        <input type="text" id="publishAuthor" placeholder="你的昵称" maxlength="20">
+                    </div>
+                    <button type="button" class="publish-btn" id="publishBtn">发布配队</button>
+                    <p class="publish-note">数据存储在本地，仅当前设备可见。刷新页面不会丢失。</p>
+                </div>
+            </div>
+
+            <!-- 我的发布 -->
+            <div class="comm-content" id="comm-my">
+                <div class="community-empty" id="myCommunityEmpty">
+                    <p>你还没有发布过配队，快去"发布配队" tab 分享你的阵容吧！</p>
+                </div>
+                <div class="community-list" id="myCommunityList"></div>
+            </div>
         </section>
 
         <!-- 全干员图鉴入口 -->
@@ -3598,7 +3664,7 @@
                 <span class="icon">&#9733;</span>
                 各职业强力干员推荐
             </h2>
-            <p class="section-desc">按培养优先级排序，标星为必练干员</p>
+            <p class="section-desc">按培养优先级排序 · <span style="color:var(--must-have)">T0 必练</span>为改变游戏体验的干员 · <span style="color:#4a8cff">T1 推荐</span>为对应职业强力干员 · 其余为T2可选</p>
 
             <!-- 先锋 -->
             <div class="operator-category">
@@ -3627,7 +3693,7 @@
                         <span class="tag">易获取</span>
                         <p>4星易获取，一技能爆费天花板，必练</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>琴柳</h4>
                         <span class="tag">减速</span>
@@ -3664,14 +3730,14 @@
                         <span class="tag">锁血</span>
                         <p>三技能"黄昏"超高法伤+锁血，法蒸核心</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>山</h4>
                         <span class="tag">单守</span>
                         <span class="tag">自回血</span>
                         <p>低费挡2打2+自回血，开局可替代先锋</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>乌尔比安</h4>
                         <span class="tag">站场</span>
@@ -3701,14 +3767,14 @@
                         <span class="tag">法蒸</span>
                         <p>"六边形战士"，治疗/回技力/法蒸增伤三位一体</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>星熊</h4>
                         <span class="tag">高防</span>
                         <span class="tag">反伤</span>
                         <p>物理防御天花板，三技能挡4+反伤</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>泥岩</h4>
                         <span class="tag">绝食</span>
@@ -3731,14 +3797,14 @@
                         <span class="tag">绝对大C</span>
                         <p><strong>现版本断档级输出</strong>，三技能可对空+超高爆发，必练！</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>莱伊</h4>
                         <span class="tag">对单</span>
                         <span class="tag">BOSS</span>
                         <p>弹药机制，单体伤害极高，仅次于EW</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>娜仁图亚</h4>
                         <span class="tag">挂机</span>
@@ -3768,7 +3834,7 @@
                         <span class="tag">挂机</span>
                         <p>全游泛用性最高术师，一二技能都好用</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>伊芙利特 (小火龙)</h4>
                         <span class="tag">直线</span>
@@ -3791,7 +3857,7 @@
                         <span class="tag">对策</span>
                         <p>法抗+法伤减免盾，法伤关卡救命稻草</p>
                     </div>
-                    <div class="operator-card star6">
+                    <div class="operator-card star6 recommend">
                         <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
                         <h4>纯烬艾雅法拉</h4>
                         <span class="tag">大范围</span>
@@ -3809,17 +3875,28 @@
             </div>
         </section>
 
-        <!-- 三套阵容 -->
+        <!-- 实用阵容 -->
         <section id="teams" class="section">
             <h2 class="section-title">
                 <span class="icon">&#9874;</span>
-                三套实用阵容
+                实用阵容推荐
             </h2>
 
-            <div class="team-tabs">
+            <div class="team-tabs" id="teamTabs">
                 <button class="tab-btn active" data-tab="normal">常规推图</button>
                 <button class="tab-btn" data-tab="hard">高难挑战</button>
                 <button class="tab-btn" data-tab="speed">速刷挂机</button>
+                <button class="tab-btn" data-tab="annihilation">剿灭挂机</button>
+                <button class="tab-btn" data-tab="roguelike">肉鸽通用</button>
+                <button class="tab-btn" data-tab="budget">低配单核</button>
+                <button class="tab-btn team-more-btn" id="teamMoreBtn">更多 &#9662;</button>
+            </div>
+
+            <div class="team-dropdown" id="teamDropdown" hidden>
+                <button class="tab-btn" data-tab="element">元素队</button>
+                <button class="tab-btn" data-tab="abyssal">深海队</button>
+                <button class="tab-btn" data-tab="kazimierz">卡西米尔</button>
+                <button class="tab-btn" data-tab="sui">岁兽队</button>
             </div>
 
             <div class="team-content active" id="normal">
@@ -3860,53 +3937,101 @@
                 </table>
                 <p class="team-note">核心思路：快速部署+爆发清场，刷材料专用</p>
             </div>
-        </section>
 
-        <!-- 萌新建议 -->
-        <section id="tips" class="section">
-            <h2 class="section-title">
-                <span class="icon">&#10003;</span>
-                萌新速成建议
-            </h2>
-            
-            <div class="tips-list">
-                <div class="tip-item">
-                    <span class="tip-num">1</span>
-                    <div class="tip-content">
-                        <h4>先凑风投体系</h4>
-                        <p>桃金娘（必练）+ 风笛（借或抽），开局爆费是核心</p>
-                    </div>
-                </div>
-                <div class="tip-item">
-                    <span class="tip-num">2</span>
-                    <div class="tip-content">
-                        <h4>优先培养维什戴尔（EW）</h4>
-                        <p>当前版本唯一真神，抽到直接拉满，改变游戏体验</p>
-                    </div>
-                </div>
-                <div class="tip-item">
-                    <span class="tip-num">3</span>
-                    <div class="tip-content">
-                        <h4>地面扛伤 + 高台输出</h4>
-                        <p>比如山/乌尔比安 + 艾雅法拉/逻各斯，基础框架就有了</p>
-                    </div>
-                </div>
-                <div class="tip-item">
-                    <span class="tip-num">4</span>
-                    <div class="tip-content">
-                        <h4>奶盾塞雷娅或黍</h4>
-                        <p>治疗+阻挡一体，大幅减少操作量，挂机必备</p>
-                    </div>
-                </div>
-                <div class="tip-item">
-                    <span class="tip-num">5</span>
-                    <div class="tip-content">
-                        <h4>决战技至少练一个</h4>
-                        <p>玛恩纳/史尔特尔/锏，用来处理BOSS和高甲精英怪</p>
-                    </div>
-                </div>
+            <div class="team-content" id="annihilation">
+                <h3>剿灭挂机阵容 <span class="team-tag">400杀稳过</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>桃金娘 + 极境</td><td>持续爆费，后期可撤</td></tr>
+                    <tr><td class="pos defender">重装</td><td>泥岩 + 塞雷娅</td><td>自回血+奶盾，单守一路</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>煌 + 山 + 玛恩纳</td><td>永续清杂+决战收尾</td></tr>
+                    <tr><td class="pos medic">医疗</td><td>夜莺 + 白面鸮</td><td>法抗+技力光环</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>维什戴尔 + 能天使</td><td>大范围清屏+对空</td></tr>
+                    <tr><td class="pos caster">术师</td><td>逻各斯 + 艾雅法拉</td><td>法伤补刀+点燃清杂</td></tr>
+                </table>
+                <p class="team-note">核心思路：摆完挂机，技能好了就开，剿灭不追求速度只求稳</p>
+            </div>
+
+            <div class="team-content" id="roguelike">
+                <h3>肉鸽通用阵容 <span class="team-tag">集成战略全结局</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>桃金娘 + 晓歌</td><td>低费+灵活切后</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>锏 + 玛恩纳 + 史尔特尔</td><td>三核应对不同Boss</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>维什戴尔 + 莱伊</td><td>EW清屏+莱伊点杀</td></tr>
+                    <tr><td class="pos medic">医疗</td><td>纯烬艾雅法拉 + 夜莺</td><td>元素损伤+法抗</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>缄默德克萨斯 + 阿斯卡纶</td><td>快活+地刺控场</td></tr>
+                </table>
+                <p class="team-note">核心思路：抓位灵活，优先拿EW/锏/玛恩纳，再根据藏品补位</p>
+            </div>
+
+            <div class="team-content" id="budget">
+                <h3>低配单核阵容 <span class="team-tag">四星五星为主</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>桃金娘 + 芬 + 讯使</td><td>爆费+低费挡二</td></tr>
+                    <tr><td class="pos defender">重装</td><td>蛇屠箱 + 古米</td><td>高防+奶盾</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>宴 + 刻刀 + 玫兰莎</td><td>法伤切+群攻+单切</td></tr>
+                    <tr><td class="pos medic">医疗</td><td>调香师 + 苏苏洛</td><td>全场缓回+爆发奶</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>克洛丝 + 杰西卡</td><td>对空+生存</td></tr>
+                    <tr><td class="pos caster">术师</td><td>阿米娅 + 卡达</td><td>真伤+控制</td></tr>
+                </table>
+                <p class="team-note">核心思路：借一个六星核心（如EW/玛恩纳），其余全用低星，通关主线无压力</p>
+            </div>
+
+            <div class="team-content" id="element">
+                <h3>元素损伤队 <span class="team-tag">对抗神经/凋亡损伤</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos medic">医疗</td><td>纯烬艾雅法拉 + 蜜莓</td><td>元素治疗双保险</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>玛恩纳 + 乌尔比安</td><td>高伤+自回血</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>维什戴尔 + 提丰</td><td>超远距+高破甲</td></tr>
+                    <tr><td class="pos defender">重装</td><td>黍 + 塞雷娅</td><td>路径控制+奶盾</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>阿斯卡纶 + 砾</td><td>减速控+快活挡</td></tr>
+                </table>
+                <p class="team-note">核心思路：元素损伤关卡优先带元素奶，高台注意站位避开损伤源</p>
+            </div>
+
+            <div class="team-content" id="abyssal">
+                <h3>深海猎人队 <span class="team-tag">乌尔比安核心</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos guard">近卫</td><td>乌尔比安 + 斯卡蒂 + 歌蕾蒂娅</td><td>三猎人互buff</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>归溟幽灵鲨</td><td>深海阵营+群体输出</td></tr>
+                    <tr><td class="pos medic">医疗</td><td>安哲拉</td><td>深海猎人不占部署位治疗</td></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>桃金娘</td><td>爆费启动</td></tr>
+                    <tr><td class="pos caster">术师</td><td>逻各斯 + 艾雅法拉</td><td>补法伤</td></tr>
+                </table>
+                <p class="team-note">核心思路：深海猎人天赋互叠，乌尔比安面板怪物，配合歌蒂生存拉满</p>
+            </div>
+
+            <div class="team-content" id="kazimierz">
+                <h3>卡西米尔队 <span class="team-tag">耀骑士+瑕光体系</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos guard">近卫</td><td>耀骑士临光 + 瑕光 + 鞭刃</td><td>卡西米尔互buff</td></tr>
+                    <tr><td class="pos defender">重装</td><td>临光</td><td>奶盾+天马光环</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>野鬃 + 灰毫</td><td>冲锋手+要塞</td></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>极境 + 桃金娘</td><td>爆费+减速</td></tr>
+                    <tr><td class="pos caster">术师</td><td>艾雅法拉</td><td>补法伤</td></tr>
+                </table>
+                <p class="team-note">核心思路：卡西米尔干员天赋互相触发，耀骑士真伤切Boss，瑕光睡眠控制</p>
+            </div>
+
+            <div class="team-content" id="sui">
+                <h3>岁兽队 <span class="team-tag">黍+令+重岳</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos defender">重装</td><td>黍 + 年</td><td>地块回血+全队buff</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>重岳 + 令</td><td>大龙承伤+拳卫输出</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>夕</td><td>小自在挡怪</td></tr>
+                    <tr><td class="pos caster">术师</td><td>艾雅法拉 + 伊芙利特</td><td>补法伤</td></tr>
+                    <tr><td class="pos medic">医疗</td><td>纯烬艾雅法拉</td><td>大范围治疗</td></tr>
+                </table>
+                <p class="team-note">核心思路：岁兽干员同场触发额外效果，黍的路径控制+令的大龙=人形防线</p>
             </div>
         </section>
+
     </main>
 
     <!-- 干员选择弹窗 -->
@@ -4017,7 +4142,8 @@
     </footer>
 
     <script src="operator_modules.js"></script>
-    <script src="operator_skills.js?v=6"></script>
-    <script src="script.js?v=6"></script>
+    <script src="operator_skills.js?v=8"></script>
+    <script src="script.js?v=8"></script>
 </body>
 </html>
+

@@ -280,6 +280,32 @@ body {
     border-left: 3px solid var(--must-have);
 }
 
+.operator-card.must-have::before {
+    content: 'T0 必练';
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: var(--must-have);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.operator-card.recommend::before {
+    content: 'T1 推荐';
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: #4a8cff;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
 .operator-card.highlight {
     border: 2px solid var(--accent-gold);
     background: linear-gradient(135deg, var(--bg-card) 0%, rgba(232, 168, 56, 0.08) 100%);
@@ -355,6 +381,33 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
+.team-more-btn {
+    background: var(--accent-gold);
+    color: var(--text-primary);
+    border-color: var(--accent-gold);
+}
+
+.team-more-btn:hover {
+    background: #d4a72c;
+    border-color: #d4a72c;
+}
+
+.team-dropdown {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    padding: 10px 15px;
+    background: rgba(10, 14, 30, 0.5);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    animation: fadeIn 0.2s ease;
+}
+
+.team-dropdown[hidden] {
+    display: none;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -419,6 +472,249 @@ body {
     color: var(--text-muted);
     font-style: italic;
     padding: 10px 0;
+}
+
+/* ========== 配队广场 ========== */
+.community-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.comm-tab {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.comm-tab:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.comm-tab.active {
+    background: var(--accent-gold);
+    color: var(--text-primary);
+    border-color: var(--accent-gold);
+}
+
+.comm-content {
+    display: none;
+}
+
+.comm-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.publish-form {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 700px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(10, 14, 30, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.tag-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(10, 14, 30, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tag-check:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.tag-check input[type="checkbox"] {
+    accent-color: var(--accent-gold);
+    cursor: pointer;
+}
+
+.publish-btn {
+    background: var(--accent-gold);
+    color: var(--text-primary);
+    border: none;
+    padding: 12px 36px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.publish-btn:hover {
+    background: #d4a72c;
+    transform: translateY(-2px);
+}
+
+.publish-note {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-top: 12px;
+}
+
+.community-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.community-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 18px;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.community-card:hover {
+    border-color: var(--accent-gold);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.comm-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.comm-card-title {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0;
+}
+
+.comm-card-author {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+.comm-card-scenes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.comm-scene-tag {
+    background: rgba(232, 168, 56, 0.12);
+    color: var(--accent-gold);
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.comm-card-desc {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.comm-card-ops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.comm-op-tag {
+    background: rgba(10, 14, 30, 0.6);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.comm-card-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.comm-card-actions button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: inherit;
+    transition: color 0.2s;
+}
+
+.comm-card-actions button:hover {
+    color: var(--accent-gold);
+}
+
+.community-empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
 }
 
 /* 萌新建议 */
