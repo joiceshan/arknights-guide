@@ -3097,6 +3097,57 @@ body.squad-open .container {
     color: var(--accent-cyan);
 }
 
+.atlas-skill-toggle {
+    background: rgba(46, 196, 182, 0.1);
+    border: 1px solid rgba(46, 196, 182, 0.3);
+    color: var(--accent-cyan);
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    margin: 8px 0;
+    transition: all 0.2s;
+}
+
+.atlas-skill-toggle:hover {
+    background: rgba(46, 196, 182, 0.2);
+}
+
+/* 建议搭配 */
+.atlas-pair-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.atlas-pair-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.atlas-pair-tag {
+    background: rgba(232, 168, 56, 0.12);
+    color: var(--accent-gold);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid rgba(232, 168, 56, 0.2);
+}
+
+.atlas-pair-reason {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    background: rgba(10, 14, 30, 0.5);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+}
+
 .atlas-skill-table-wrap {
     overflow-x: auto;
     border-radius: 8px;

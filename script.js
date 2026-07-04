@@ -702,11 +702,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span>${escapeHtml(skill.type || '技能类型未知')}</span>
                     </div>
                     <div class="atlas-skill-gain"><strong>升级收益：</strong>${escapeHtml(skill.gain)}</div>
-                    <div class="atlas-skill-table-wrap">
-                        <table class="atlas-skill-table">
-                            <thead><tr>${headers.map(header => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead>
-                            <tbody>${rows}</tbody>
-                        </table>
+                    <button class="atlas-skill-toggle" type="button">展开详情 &#9662;</button>
+                    <div class="atlas-skill-detail" hidden>
+                        <div class="atlas-skill-table-wrap">
+                            <table class="atlas-skill-table">
+                                <thead><tr>${headers.map(header => `<th>${escapeHtml(header)}</th>`).join('')}</tr></thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             `;
@@ -748,6 +751,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 技能详情展开/收起
+    document.getElementById('detailSkills')?.addEventListener('click', function(e) {
+        const toggleBtn = e.target.closest('.atlas-skill-toggle');
+        if (!toggleBtn) return;
+        const detail = toggleBtn.nextElementSibling;
+        if (!detail) return;
+        if (detail.hidden) {
+            detail.removeAttribute('hidden');
+            toggleBtn.innerHTML = '收起详情 &#9652;';
+        } else {
+            detail.setAttribute('hidden', '');
+            toggleBtn.innerHTML = '展开详情 &#9662;';
+        }
+    });
+
     function openDetail(card) {
         if (!detailModal) return;
         const data = card.dataset;
@@ -778,10 +796,79 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>`;
         }).join('');
 
+        // 重置搭配建议
+        const pairContent = document.getElementById('atlasPairContent');
+        const pairToggle = document.getElementById('atlasPairToggle');
+        if (pairContent) pairContent.setAttribute('hidden', '');
+        if (pairToggle) pairToggle.innerHTML = '展开搭配建议 &#9662;';
+
         detailModal.hidden = false;
         document.body.style.overflow = 'hidden';
         loadOperatorSkills(safeValue(data.atlasName));
     }
+
+    // ========== 建议搭配数据 ==========
+    const COMPANIONS = {
+        '玛恩纳': ['锏', '史尔特尔', '艾雅法拉', '铃兰', '伊芙利特', '塞雷娅', '推荐理由：玛恩纳三技能需要控制型辅助增伤（铃兰/灵知）+奶盾续命（塞雷娅），配合法蒸队或决战队使用'],
+        '史尔特尔': ['塞雷娅', '纯烬艾雅法拉', '夜莺', '艾雅法拉', '伊芙利特', '推荐理由：42真银斩+二技能破甲线，配合奶盾保证生存，配合法系形成法蒸核爆'],
+        '维什戴尔': ['纯烬艾雅法拉', '伊内丝', '塞雷娅', '桃金娘', '黍', '推荐理由：EW弹药输出极高，伊内丝增伤，纯烬/塞雷娅续航，桃金娘爆费启动'],
+        '银灰': ['棘刺', '煌', '泥岩', '塞雷娅', '白面鸮', '推荐理由：真银斩大范围清屏，配合基石干员（棘刺/煌/泥岩）永续站场'],
+        '伊芙利特': ['艾雅法拉', '塞雷娅', '夜莺', '纯烬艾雅法拉', '推荐理由：小火龙直线清场，配合羊点燃+塞雷娅钙质化增伤形成法蒸体系'],
+        '塞雷娅': ['纯烬艾雅法拉', '夜莺', '泥岩', '伊芙利特', '玛恩纳', '推荐理由：六边形战士，治疗/回技力/钙质化增伤三位一体，几乎适配所有队伍'],
+        '缄默德克萨斯': ['桃金娘', '纯烬艾雅法拉', '伊内丝', '令', '推荐理由：快活切后天花板，二技能法伤眩晕+沉默，配合伊内丝形成切后链'],
+        '艾雅法拉': ['伊芙利特', '塞雷娅', '夜莺', '纯烬艾雅法拉', '推荐理由：火山二技能是法系核心输出，配合小火龙+塞雷娅形成法蒸'],
+        '夜莺': ['纯烬艾雅法拉', '塞雷娅', '艾雅法拉', '史尔特尔', '推荐理由：法抗护盾+大范围群奶，法蒸队必备生存位'],
+        '锏': ['铃兰', '灵知', '塞雷娅', '玛恩纳', '推荐理由：战栗控制+高爆发，配合铃兰/灵知增伤形成控制链'],
+        '桃金娘': ['风笛', '极境', '德克萨斯', '推荐理由：爆费先锋核心，风笛配合费用减半再部署，快速启动'],
+        '风笛': ['桃金娘', '推进之王', '极境', '推荐理由：二技能自动回费+群体爆费，配合桃金娘形成最快爆费体系'],
+        '棘刺': ['银灰', '煌', '塞雷娅', '泥岩', '推荐理由：至高之术永续群攻，配合基石干员挂机推图'],
+        '煌': ['银灰', '棘刺', '塞雷娅', '白面鸮', '推荐理由：链锯延伸群攻+抵抗，基石挂机体系核心'],
+        '泥岩': ['塞雷娅', '星熊', '白面鸮', '推荐理由：绝食自回血单守一路，不需要医疗，节省编队位'],
+        '令': ['桃金娘', '纯烬艾雅法拉', '伊内丝', '推荐理由：大龙替代重装+输出，双人通关神器（ZC常用打法）'],
+        '铃兰': ['玛恩纳', '锏', '艾雅法拉', '塞雷娅', '推荐理由：狐火渺然增伤+停顿控制，配合决战技干员爆发极高'],
+        '纯烬艾雅法拉': ['史尔特尔', '维什戴尔', '玛恩纳', '推荐理由：大范围治疗+攻击力加成，当前版本最强单奶'],
+        '逻各斯': ['伊芙利特', '艾雅法拉', '澄闪', '推荐理由：五周年限定元素术师，配合法系队伍输出最大化'],
+        '伊内丝': ['维什戴尔', '缄默德克萨斯', '令', '推荐理由：增伤拐+切入输出，配合EW/异德形成切入链'],
+        '白面鸮': ['塞雷娅', '纯烬艾雅法拉', '艾雅法拉', '推荐理由：技力光环全队加速，法蒸队加速技能回转'],
+        '华法琳': ['能天使', '维什戴尔', '灰烬', '推荐理由：血怒加攻拐，配合速狙队物理爆发'],
+        '能天使': ['华法琳', '空弦', '灰烬', '极境', '推荐理由：过载三连击，配合华法琳血怒+拐形成速狙爆发'],
+    };
+
+    function renderPairSuggestions(operatorName) {
+        const pairContent = document.getElementById('atlasPairContent');
+        if (!pairContent) return;
+
+        let companions = COMPANIONS[operatorName];
+        if (!companions) {
+            // 通用推荐
+            companions = ['塞雷娅', '纯烬艾雅法拉', '桃金娘', '推荐理由：未收录该干员的专属搭配，以上为通用万金油推荐'];
+        }
+
+        const reason = companions.find(c => c.startsWith('推荐理由')) || '';
+        const names = companions.filter(c => !c.startsWith('推荐理由'));
+
+        pairContent.innerHTML = names.length ? `
+            <div class="atlas-pair-list">
+                ${names.map(n => `<span class="atlas-pair-tag">${escapeHtml(n)}</span>`).join('')}
+            </div>
+            ${reason ? `<p class="atlas-pair-reason">${escapeHtml(reason.replace('推荐理由：', ''))}</p>` : ''}
+        ` : '<p class="atlas-skill-status">暂无搭配建议</p>';
+    }
+
+    // 搭配建议展开/收起
+    document.getElementById('atlasPairToggle')?.addEventListener('click', function() {
+        const content = document.getElementById('atlasPairContent');
+        if (!content) return;
+        const name = document.getElementById('atlasDetailName')?.textContent || '';
+        if (content.hidden) {
+            renderPairSuggestions(name);
+            content.removeAttribute('hidden');
+            this.innerHTML = '收起搭配建议 &#9652;';
+        } else {
+            content.setAttribute('hidden', '');
+            this.innerHTML = '展开搭配建议 &#9662;';
+        }
+    });
 
     function closeDetail() {
         if (!detailModal) return;
@@ -3089,4 +3176,92 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     refreshCommunity();
+
+    // ========== 管理员登录 ==========
+    const ADMIN_KEY = 'arknights_admin';
+    const ADMIN_USERS = [{ user: 's.k_joyce', pass: 'dsy071213' }]; // 可扩展更多管理员
+
+    function isAdmin() {
+        try { return JSON.parse(localStorage.getItem(ADMIN_KEY)) || false; }
+        catch { return false; }
+    }
+
+    function updateAdminUI() {
+        const loginBtn = document.getElementById('adminLoginBtn');
+        const manageTab = document.querySelector('.admin-only-tab');
+        if (isAdmin()) {
+            if (loginBtn) loginBtn.textContent = '管理员已登录';
+            if (loginBtn) loginBtn.style.background = '#4caf50';
+            if (loginBtn) loginBtn.style.borderColor = '#4caf50';
+            if (manageTab) manageTab.removeAttribute('hidden');
+        } else {
+            if (loginBtn) { loginBtn.textContent = '管理员登录'; loginBtn.style.background = ''; loginBtn.style.borderColor = ''; }
+            if (manageTab) manageTab.setAttribute('hidden', '');
+        }
+    }
+
+    document.getElementById('adminLoginBtn')?.addEventListener('click', function() {
+        if (isAdmin()) {
+            // 已登录，点击退出
+            localStorage.removeItem(ADMIN_KEY);
+            updateAdminUI();
+            alert('已退出管理员');
+            return;
+        }
+        // 弹出登录框
+        const user = prompt('请输入管理员用户名：');
+        if (!user) return;
+        const pass = prompt('请输入管理员密码：');
+        if (!pass) return;
+        const found = ADMIN_USERS.find(a => a.user === user && a.pass === pass);
+        if (found) {
+            localStorage.setItem(ADMIN_KEY, 'true');
+            updateAdminUI();
+            alert('登录成功！');
+        } else {
+            alert('用户名或密码错误');
+        }
+    });
+
+    // manage tab也触发refresh
+    commTabs.forEach(tab => {
+        // 已有事件，在refreshCommunity中加入manage
+    });
+
+    // 在refreshCommunity中追加管理列表
+    const origRefresh = refreshCommunity;
+    refreshCommunity = function() {
+        origRefresh();
+        if (isAdmin()) {
+            const all = loadCommunitySquads();
+            renderCommunityCards('manageCommunityList', all, true);
+            const manageEmpty = document.getElementById('manageCommunityEmpty');
+            if (manageEmpty) manageEmpty.style.display = all.length ? 'none' : 'block';
+        }
+    };
+
+    // 管理列表删除
+    document.getElementById('manageCommunityList')?.addEventListener('click', function(e) {
+        const delBtn = e.target.closest('[data-del-idx]');
+        if (delBtn) {
+            if (!confirm('确定删除这条配队吗？此操作不可撤销。')) return;
+            const idx = parseInt(delBtn.getAttribute('data-del-idx'));
+            const squads = loadCommunitySquads();
+            if (squads[idx]) {
+                squads.splice(idx, 1);
+                saveCommunitySquads(squads);
+                refreshCommunity();
+            }
+        }
+    });
+
+    // tab切换时也刷新manage
+    commTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-comm-tab');
+            if (tabName === 'manage') refreshCommunity();
+        });
+    });
+
+    updateAdminUI();
 });

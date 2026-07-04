@@ -113,6 +113,15 @@
                     <p style="color:var(--text-muted); font-size:0.85rem; padding:10px 0;">暂无历史保存的编队</p>
                 </div>
             </div>
+
+            <!-- 管理删除（仅管理员可见） -->
+            <div class="comm-content" id="comm-manage">
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:15px">管理员可以在此删除任意配队</p>
+                <div class="community-empty" id="manageCommunityEmpty">
+                    <p>暂无配队数据</p>
+                </div>
+                <div class="community-list" id="manageCommunityList"></div>
+            </div>
         </section>
 
         <!-- 编队模拟入口 -->
@@ -3558,6 +3567,15 @@
                         <p class="atlas-skill-status">打开干员详情后自动读取技能数据。</p>
                     </div>
                 </div>
+                <div class="atlas-detail-section atlas-pair-section">
+                    <div class="atlas-pair-header">
+                        <h4>建议搭配</h4>
+                        <button class="atlas-skill-toggle" type="button" id="atlasPairToggle">展开搭配建议 &#9662;</button>
+                    </div>
+                    <div class="atlas-pair-content" id="atlasPairContent" hidden>
+                        <p class="atlas-skill-status">正在加载搭配建议...</p>
+                    </div>
+                </div>
             </article>
         </div>
 
@@ -4285,7 +4303,10 @@
         <section id="community" class="section page-section" hidden>
             <div class="page-header">
                 <h2 style="font-size:1.8rem; color:var(--accent-gold);">配队广场</h2>
-                <button class="atlas-back-btn" type="button" data-close-page="community">返回首页</button>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="atlas-back-btn admin-login-btn" type="button" id="adminLoginBtn">管理员登录</button>
+                    <button class="atlas-back-btn" type="button" data-close-page="community">返回首页</button>
+                </div>
             </div>
             <h2 class="section-title">
                 <span class="icon">&#128172;</span>
@@ -4297,6 +4318,7 @@
                 <button class="comm-tab active" data-comm-tab="list">热门配队</button>
                 <button class="comm-tab" data-comm-tab="publish">发布配队</button>
                 <button class="comm-tab" data-comm-tab="my">我的发布</button>
+                <button class="comm-tab admin-only-tab" data-comm-tab="manage" hidden>管理删除</button>
             </div>
 
             <!-- 热门配队列表 -->
