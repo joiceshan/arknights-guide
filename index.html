@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
     <!-- 封面 -->
@@ -116,6 +116,7 @@
                 <button class="squad-action-btn analyze" type="button" id="squadAnalyzeBtn">开始分析</button>
                 <button class="squad-action-btn primary" type="button" id="squadExportBtn">导出编队</button>
                 <button class="squad-action-btn primary" type="button" id="squadImportBtn">导入编队</button>
+                <button class="squad-action-btn analyze" type="button" id="squadCodeBtn">生成编队代码</button>
             </div>
 
             <div class="squad-grid" id="squadGrid"></div>
@@ -198,8 +199,9 @@
                         <textarea id="publishDesc" placeholder="描述一下这套配队的核心思路、使用场景、操作要点..." rows="4" maxlength="300"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>12人干员列表（用顿号、逗号或空格分隔）</label>
-                        <input type="text" id="publishOps" placeholder="例如：桃金娘, 风笛, 塞雷娅, 玛恩纳, 维什戴尔, 夜莺, 艾雅法拉, 伊内丝, 山, 缄默德克萨斯, 纯烬艾雅法拉, 史尔特尔" maxlength="200">
+                        <label>编队代码（从编队模拟页面点击"生成编队代码"复制粘贴）</label>
+                        <input type="text" id="publishCode" placeholder="例如：桃金娘:1:3|风笛:2:3|塞雷娅:1:3|玛恩纳:3:3|维什戴尔:3:3|夜莺:3:3|艾雅法拉:2:3|伊内丝:2:3|山:2:3|缄默德克萨斯:3:3|纯烬艾雅法拉:1:3|史尔特尔:3:3" maxlength="300">
+                        <p style="color:var(--text-muted);font-size:0.75rem;margin-top:4px">格式：干员名:技能:专精|干员名:技能:专精|...  也可直接粘贴游戏内分享码或纯文本干员名</p>
                     </div>
                     <div class="form-group">
                         <label>适用场景（多选）</label>
@@ -3700,6 +3702,35 @@
                         <span class="tag">加buff</span>
                         <p>减速+加攻防，前期过渡顺滑</p>
                     </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>推进之王</h4>
+                        <span class="tag">站场</span>
+                        <span class="tag">输出</span>
+                        <p>前期站场输出，二技能自动回费+攻击</p>
+                    </div>
+                    <div class="operator-card star5 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>德克萨斯</h4>
+                        <span class="tag">控制</span>
+                        <span class="tag">爆费</span>
+                        <p>剑雨群体眩晕，开局+两费，功能性强</p>
+                    </div>
+                    <div class="operator-card star5 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>极境</h4>
+                        <span class="tag">爆费</span>
+                        <span class="tag">减速</span>
+                        <p>执旗手爆费+减速减甲，狙击队核心</p>
+                    </div>
+                    <div class="operator-card star5 op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>晓歌</h4>
+                        <span class="tag">快复</span>
+                        <span class="tag">切后</span>
+                        <p>情报官攻击回费，可切后+快速部署</p>
+                    </div>
+                    <button class="op-more-btn" data-more-class="先锋">+ 查看更多强力先锋</button>
                 </div>
             </div>
 
@@ -3744,6 +3775,42 @@
                         <span class="tag">深海</span>
                         <p>面板极高，二技能永续挡3打3</p>
                     </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>银灰</h4>
+                        <span class="tag">决战</span>
+                        <span class="tag">反隐</span>
+                        <p>真银斩大范围清屏，天赋减再部署</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>棘刺</h4>
+                        <span class="tag">永续</span>
+                        <span class="tag">站场</span>
+                        <p>至高之术永续+自回血，单守一路</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>煌</h4>
+                        <span class="tag">群攻</span>
+                        <span class="tag">永续</span>
+                        <p>链锯延伸群攻+抵抗，清杂神卡</p>
+                    </div>
+                    <div class="operator-card star6 must-have op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>缄默德克萨斯</h4>
+                        <span class="tag">快活</span>
+                        <span class="tag">法伤</span>
+                        <p>二技能法伤眩晕+沉默，快活天花板</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>耀骑士临光</h4>
+                        <span class="tag">真伤</span>
+                        <span class="tag">切后</span>
+                        <p>耀阳颔首真伤切Boss，不占部署位</p>
+                    </div>
+                    <button class="op-more-btn" data-more-class="近卫">+ 查看更多强力近卫</button>
                 </div>
             </div>
 
@@ -3781,6 +3848,31 @@
                         <span class="tag">单守</span>
                         <p>不吃治疗，二技能群攻，单守一路能力极强</p>
                     </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>年</h4>
+                        <span class="tag">限定</span><span class="tag">护盾</span>
+                        <p>限定重装，全队加防+护盾</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>瑕光</h4>
+                        <span class="tag">治疗</span><span class="tag">睡眠</span>
+                        <p>先贤化身治疗+睡眠控制</p>
+                    </div>
+                    <div class="operator-card star4 op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>蛇屠箱</h4>
+                        <span class="tag">高防</span><span class="tag">易获取</span>
+                        <p>4星物防天花板，挡4</p>
+                    </div>
+                    <div class="operator-card star5 op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>临光</h4>
+                        <span class="tag">奶盾</span><span class="tag">天马</span>
+                        <p>奶盾+天马光环治疗</p>
+                    </div>
+                    <button class="op-more-btn" data-more-class="重装">+ 查看更多强力重装</button>
                 </div>
             </div>
 
@@ -3811,6 +3903,35 @@
                         <span class="tag">大范围</span>
                         <p>回旋镖机制，可对范围外敌人输出</p>
                     </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>能天使</h4>
+                        <span class="tag">速狙</span>
+                        <span class="tag">过载</span>
+                        <p>过载模式三连击，低甲蒸发器</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>莱伊</h4>
+                        <span class="tag">单体</span>
+                        <span class="tag">破甲</span>
+                        <p>弹药机制单体伤害极高，仅次于EW</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>提丰</h4>
+                        <span class="tag">超远</span>
+                        <span class="tag">控制</span>
+                        <p>二技能永续+三技能超远距点名</p>
+                    </div>
+                    <div class="operator-card star5 op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>寒芒克洛丝</h4>
+                        <span class="tag">速狙</span>
+                        <span class="tag">眩晕</span>
+                        <p>能天使下位替代，带眩晕控制</p>
+                    </div>
+                    <button class="op-more-btn" data-more-class="狙击">+ 查看更多强力狙击</button>
                 </div>
             </div>
 
@@ -3841,6 +3962,35 @@
                         <span class="tag">清场</span>
                         <p>长条范围，狭窄路口伤害最大化</p>
                     </div>
+                    <div class="operator-card star6 must-have op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>逻各斯</h4>
+                        <span class="tag">元素</span>
+                        <span class="tag">法伤</span>
+                        <p>五周年限定，当前最强术师之一</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>刻俄柏</h4>
+                        <span class="tag">单体</span>
+                        <span class="tag">剥壳</span>
+                        <p>二技能剥壳剥一切高甲，非常灵活</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>莫斯提马</h4>
+                        <span class="tag">控制</span>
+                        <span class="tag">群攻</span>
+                        <p>时停+减速，控制流核心</p>
+                    </div>
+                    <div class="operator-card star6 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>澄闪</h4>
+                        <span class="tag">全图</span>
+                        <span class="tag">浮游</span>
+                        <p>三技能全图攻击，浮游炮越打越痛</p>
+                    </div>
+                    <button class="op-more-btn" data-more-class="术师">+ 查看更多强力术师</button>
                 </div>
             </div>
 
@@ -3871,6 +4021,35 @@
                         <span class="tag">技力</span>
                         <p>二技能群体爆发治疗，天赋加速技能回转</p>
                     </div>
+                    <div class="operator-card star5 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>白面鸮</h4>
+                        <span class="tag">群奶</span>
+                        <span class="tag">技力</span>
+                        <p>技力光环全队加速，二技能爆发治疗</p>
+                    </div>
+                    <div class="operator-card star5 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>华法琳</h4>
+                        <span class="tag">加攻</span>
+                        <span class="tag">拐</span>
+                        <p>血怒加攻拐，一技能百分比回血</p>
+                    </div>
+                    <div class="operator-card star5 recommend op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>蜜莓</h4>
+                        <span class="tag">元素奶</span>
+                        <span class="tag">缓回</span>
+                        <p>元素损伤治疗，肉鸽和主线必备</p>
+                    </div>
+                    <div class="operator-card star4 op-more-item" hidden>
+                        <div class="star-badge">&#9733;&#9733;&#9733;&#9733;</div>
+                        <h4>苏苏洛</h4>
+                        <span class="tag">爆发奶</span>
+                        <span class="tag">易获取</span>
+                        <p>四星冥土追魂，二技能奶量极高</p>
+                    </div>
+                    <button class="op-more-btn" data-more-class="医疗">+ 查看更多强力医疗</button>
                 </div>
             </div>
         </section>
@@ -3889,6 +4068,8 @@
                 <button class="tab-btn" data-tab="annihilation">剿灭挂机</button>
                 <button class="tab-btn" data-tab="roguelike">肉鸽通用</button>
                 <button class="tab-btn" data-tab="budget">低配单核</button>
+                <button class="tab-btn" data-tab="fav">法蒸队</button>
+                <button class="tab-btn" data-tab="ground">地面推进</button>
                 <button class="tab-btn team-more-btn" id="teamMoreBtn">更多 &#9662;</button>
             </div>
 
@@ -3897,6 +4078,10 @@
                 <button class="tab-btn" data-tab="abyssal">深海队</button>
                 <button class="tab-btn" data-tab="kazimierz">卡西米尔</button>
                 <button class="tab-btn" data-tab="sui">岁兽队</button>
+                <button class="tab-btn" data-tab="ling">令核少人</button>
+                <button class="tab-btn" data-tab="control">控制链</button>
+                <button class="tab-btn" data-tab="fast">速狙队</button>
+                <button class="tab-btn" data-tab="noheal">绝食队</button>
             </div>
 
             <div class="team-content active" id="normal">
@@ -4030,6 +4215,84 @@
                 </table>
                 <p class="team-note">核心思路：岁兽干员同场触发额外效果，黍的路径控制+令的大龙=人形防线</p>
             </div>
+
+            <div class="team-content" id="fav">
+                <h3>法蒸队 <span class="team-tag">超高法伤融化一切</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos caster">术师</td><td>史尔特尔 + 艾雅法拉 + 伊芙利特</td><td>三法核叠加，法抗也扛不住</td></tr>
+                    <tr><td class="pos defender">重装</td><td>塞雷娅 + 黍</td><td>钙质化+技力光环+奶盾</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>铃兰 + 阿</td><td>狐火渺然增伤+榴莲针爆发</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>玛恩纳</td><td>补物理输出，处理高法抗单位</td></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>桃金娘 + 风笛</td><td>爆费启动</td></tr>
+                </table>
+                <p class="team-note">核心思路：塞雷娅钙质化+铃兰狐火+小火龙减抗，42+羊瞬间蒸发一切Boss，血狼破军认证的版本答案</p>
+            </div>
+
+            <div class="team-content" id="ground">
+                <h3>地面推进队 <span class="team-tag">永续站场不撤退</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos guard">近卫</td><td>银灰 + 棘刺 + 煌 + 山</td><td>真银斩+永续+群攻+自回血</td></tr>
+                    <tr><td class="pos defender">重装</td><td>泥岩 + 塞雷娅</td><td>绝食单守+奶盾</td></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>桃金娘 + 德克萨斯</td><td>爆费+控制</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>维什戴尔 + 能天使</td><td>清屏+对空</td></tr>
+                    <tr><td class="pos medic">医疗</td><td>白面鸮</td><td>技力光环加速技能回转</td></tr>
+                </table>
+                <p class="team-note">核心思路：全员地面不需要高台，摆完挂机，银灰真银斩处理高压波，棘刺煌永续清杂</p>
+            </div>
+
+            <div class="team-content" id="ling">
+                <h3>令核少人队 <span class="team-tag">单人/双人通关</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos guard">近卫</td><td>令</td><td>核心，大龙=重装+输出</td></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>桃金娘</td><td>爆费，令部署费用高</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>缄默德克萨斯</td><td>快活补漏+切后</td></tr>
+                    <tr><td class="pos caster">术师</td><td>艾雅法拉</td><td>补法伤+对空</td></tr>
+                    <tr><td class="pos medic">医疗</td><td>纯烬艾雅法拉</td><td>大范围奶住令</td></tr>
+                </table>
+                <p class="team-note">核心思路：令的大龙可以替代重装+近卫+狙击，绝大多数主线图令+桃金娘双人通关，ZC常用打法</p>
+            </div>
+
+            <div class="team-content" id="control">
+                <h3>控制链队 <span class="team-tag">动一下算我输</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos caster">术师</td><td>莫斯提马 + 艾雅法拉</td><td>时停+点燃</td></tr>
+                    <tr><td class="pos supporter">辅助</td><td>铃兰 + 灵知</td><td>停顿+冻结脆弱</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>阿斯卡纶 + 麒麟夜刀</td><td>减速地刺+眩晕快活</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>锏 + 玛恩纳</td><td>战栗+决战技</td></tr>
+                    <tr><td class="pos defender">重装</td><td>黍</td><td>路径控制+地块回血</td></tr>
+                </table>
+                <p class="team-note">核心思路：让敌人全程走不动，莫斯提马时停+铃兰狐火+灵知冻结+阿斯卡纶减速，控到死</p>
+            </div>
+
+            <div class="team-content" id="fast">
+                <h3>速狙队 <span class="team-tag">过载模式突突突</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos sniper">狙击</td><td>能天使 + 灰烬(ASH) + 空弦</td><td>三速狙轮换输出</td></tr>
+                    <tr><td class="pos supporter">辅助</td><td>华法琳 + 空 + 铃兰</td><td>加攻+加攻速+脆弱</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>阿</td><td>榴莲针+爆发</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>玛恩纳</td><td>补大范围输出</td></tr>
+                    <tr><td class="pos vanguard">先锋</td><td>极境 + 桃金娘</td><td>减速+爆费</td></tr>
+                </table>
+                <p class="team-note">核心思路：能天使过载+华法琳血怒=蒸发一切低甲，空弦ash补对空，打飞机关专属</p>
+            </div>
+
+            <div class="team-content" id="noheal">
+                <h3>绝食队 <span class="team-tag">不需要奶的医疗废物</span></h3>
+                <table class="team-table">
+                    <tr><th>位置</th><th>推荐干员</th><th>说明</th></tr>
+                    <tr><td class="pos defender">重装</td><td>泥岩 + 斥罪</td><td>自回血+护盾反伤</td></tr>
+                    <tr><td class="pos guard">近卫</td><td>乌尔比安 + 山 + 赫德雷</td><td>自回血永续站场</td></tr>
+                    <tr><td class="pos specialist">特种</td><td>归溟幽灵鲨</td><td>替身回血+锁血</td></tr>
+                    <tr><td class="pos sniper">狙击</td><td>维什戴尔</td><td>清屏输出</td></tr>
+                    <tr><td class="pos caster">术师</td><td>逻各斯</td><td>法伤补刀</td></tr>
+                </table>
+                <p class="team-note">核心思路：全员自回血/护盾/锁血，一个医疗都不带，泥岩斥罪单守一路，乌尔比安山正面硬刚</p>
+            </div>
         </section>
 
     </main>
@@ -4142,8 +4405,8 @@
     </footer>
 
     <script src="operator_modules.js"></script>
-    <script src="operator_skills.js?v=8"></script>
-    <script src="script.js?v=8"></script>
+    <script src="operator_skills.js?v=9"></script>
+    <script src="script.js?v=9"></script>
 </body>
 </html>
 

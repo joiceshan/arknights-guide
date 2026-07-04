@@ -154,7 +154,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
+    // 干员推荐 - "更多"按钮展开
+    document.querySelectorAll('.op-more-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const cls = this.getAttribute('data-more-class');
+            const parent = this.closest('.operator-list');
+            if (!parent) return;
+            const hidden = parent.querySelectorAll('.op-more-item[hidden]');
+            if (hidden.length > 0) {
+                hidden.forEach(el => el.removeAttribute('hidden'));
+                this.textContent = '- 收起';
+            } else {
+                parent.querySelectorAll('.op-more-item').forEach(el => el.setAttribute('hidden', ''));
+                this.textContent = '+ 查看更多强力' + cls;
+            }
+        });
+    });
+
     // 滚动时高亮当前导航项
     function highlightNavOnScroll() {
         let current = '';
@@ -2597,6 +2614,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ========== 编队代码（短格式分享码） ==========
+    function generateSquadCode(members) {
+        // 格式：干员名:技能:专精|干员名:技能:专精|...
+        const parts = members.filter(Boolean).map(m => {
+            return `${m.name}:${m.skill || 1}:${m.mastery || 0}`;
+        });
+        return parts.join('|');
+    }
+
+    function parseSquadCode(code) {
+        if (!code || !code.trim()) return [];
+        return code.trim().split(/[|\n]/).map(line => {
+            const [name, skill, mastery] = line.trim().split(':');
+            if (!name) return null;
+            return {
+                name: name.trim(),
+                skill: parseInt(skill, 10) || 1,
+                mastery: parseInt(mastery, 10) || 0
+            };
+        }).filter(Boolean);
+    }
+
+    const squadCodeBtn = document.getElementById('squadCodeBtn');
+    if (squadCodeBtn) {
+        squadCodeBtn.addEventListener('click', function() {
+            const members = squadData.filter(Boolean);
+            if (!members.length) {
+                alert('编队为空，无法生成代码');
+                return;
+            }
+            const code = generateSquadCode(members);
+            navigator.clipboard.writeText(code).then(() => {
+                alert('编队代码已复制！可直接粘贴到配队广场分享。\n\n' + code.substring(0, 80) + (code.length > 80 ? '...' : ''));
+            }).catch(() => {
+                alert('编队代码：\n' + code);
+            });
+        });
+    }
+
     // ========== 历史编队 ==========
     const SQUAD_HISTORY_KEY = 'arknights-squad-history';
 
@@ -2774,8 +2830,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = document.createElement('div');
             card.className = 'community-card';
             const scenesHtml = (squad.scenes || []).map(s => `<span class="comm-scene-tag">${escapeHtml(s)}</span>`).join('');
-            const opsHtml = (squad.ops || []).map(o => `<span class="comm-op-tag">${escapeHtml(o)}</span>`).join('');
             const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
+            const codePreview = squad.code ? escapeHtml(squad.code.substring(0, 60)) + (squad.code.length > 60 ? '...' : '') : '';
             card.innerHTML = `
                 <div class="comm-card-header">
                     <h4 class="comm-card-title">${escapeHtml(squad.title)}</h4>
@@ -2783,9 +2839,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 ${scenesHtml ? `<div class="comm-card-scenes">${scenesHtml}</div>` : ''}
                 <div class="comm-card-desc">${escapeHtml(squad.desc)}</div>
-                <div class="comm-card-ops">${opsHtml}</div>
+                ${codePreview ? `<div class="comm-card-code"><code>${codePreview}</code></div>` : ''}
                 <div class="comm-card-actions">
                     <button data-like-idx="${idx}">&#128077; 点赞 (${squad.likes || 0})</button>
+                    ${squad.code ? `<button data-copy-code="${idx}">&#128203; 复制编队代码</button>` : ''}
                     ${showDelete ? `<button data-del-idx="${idx}" style="color:#f87171">删除</button>` : ''}
                 </div>
             `;
@@ -2821,19 +2878,24 @@ document.addEventListener('DOMContentLoaded', function() {
         publishBtn.addEventListener('click', function() {
             const title = document.getElementById('publishTitle')?.value?.trim();
             const desc = document.getElementById('publishDesc')?.value?.trim();
-            const opsStr = document.getElementById('publishOps')?.value?.trim();
+            const code = document.getElementById('publishCode')?.value?.trim();
             const author = document.getElementById('publishAuthor')?.value?.trim() || '匿名博士';
             const scenes = Array.from(document.querySelectorAll('input[data-scene]:checked')).map(cb => cb.value);
 
             if (!title) { alert('请填写配队名称'); return; }
-            if (!opsStr) { alert('请填写干员列表'); return; }
+            if (!code) { alert('请填写编队代码'); return; }
 
-            const ops = opsStr.split(/[,，、\s]+/).filter(Boolean);
+            // 优先解析编队代码格式 name:skill:mastery|...
+            let ops = parseSquadCode(code).map(o => o.name);
+            // 如果解析不到，尝试按分隔符拆分纯文本
+            if (!ops.length) {
+                ops = code.split(/[,，、\s]+/).filter(Boolean);
+            }
             if (ops.length > 12) ops.splice(12);
 
             const squads = loadCommunitySquads();
             squads.unshift({
-                title, desc, ops, scenes, author,
+                title, desc, code, scenes, author,
                 time: Date.now(),
                 likes: 0
             });
@@ -2842,7 +2904,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 清空表单
             document.getElementById('publishTitle').value = '';
             document.getElementById('publishDesc').value = '';
-            document.getElementById('publishOps').value = '';
+            document.getElementById('publishCode').value = '';
             document.querySelectorAll('input[data-scene]').forEach(cb => cb.checked = false);
 
             alert('发布成功！');
@@ -2856,7 +2918,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 点赞/删除事件委托
+    // 点赞/复制/删除事件委托
     document.getElementById('communityList')?.addEventListener('click', function(e) {
         const likeBtn = e.target.closest('[data-like-idx]');
         if (likeBtn) {
@@ -2867,6 +2929,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 saveCommunitySquads(squads);
                 refreshCommunity();
             }
+            return;
+        }
+        const copyBtn = e.target.closest('[data-copy-code]');
+        if (copyBtn) {
+            const idx = parseInt(copyBtn.getAttribute('data-copy-code'));
+            const squads = loadCommunitySquads();
+            if (squads[idx] && squads[idx].code) {
+                navigator.clipboard.writeText(squads[idx].code).then(() => {
+                    alert('编队代码已复制！可在编队模拟页面粘贴导入。');
+                }).catch(() => alert('复制失败，请手动复制'));
+            }
+            return;
         }
     });
 

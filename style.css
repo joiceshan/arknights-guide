@@ -379,6 +379,10 @@ body {
 .team-content.active {
     display: block;
     animation: fadeIn 0.3s ease;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
 }
 
 .team-more-btn {
@@ -512,6 +516,10 @@ body {
 .comm-content.active {
     display: block;
     animation: fadeIn 0.3s ease;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
 }
 
 .publish-form {
@@ -709,6 +717,49 @@ body {
 
 .comm-card-actions button:hover {
     color: var(--accent-gold);
+}
+
+.comm-card-code {
+    background: rgba(10, 14, 30, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+}
+
+.comm-card-code code {
+    color: var(--accent-gold);
+    font-size: 0.78rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    word-break: break-all;
+}
+
+.op-more-btn {
+    grid-column: 1 / -1;
+    background: rgba(232, 168, 56, 0.08);
+    border: 1px dashed var(--accent-gold);
+    color: var(--accent-gold);
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.op-more-btn:hover {
+    background: rgba(232, 168, 56, 0.15);
+}
+
+.op-more-item[hidden] {
+    display: none !important;
+}
+
+.op-more-item {
+    display: block;
+    animation: fadeIn 0.3s ease;
 }
 
 .community-empty {
