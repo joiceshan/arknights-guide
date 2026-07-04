@@ -3791,6 +3791,20 @@ body.page-open #atlas-entry {
     text-shadow: 0 1px 3px rgba(0,0,0,0.4);
     flex-shrink: 0;
     border: 2px solid rgba(255,255,255,0.15);
+    overflow: hidden;
+    background: #1e293b;
+}
+
+.comm-avatar-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.comm-avatar-fallback {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
 }
 
 @media (max-width: 768px) {

@@ -291,6 +291,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function openAtlas(event) {
         if (event) event.preventDefault();
         if (!atlas) return;
+        // 关闭squad和page-open状态
+        document.body.classList.remove('squad-open', 'page-open');
+        const squadPage = document.getElementById('squad');
+        if (squadPage) squadPage.setAttribute('hidden', '');
+        // 关闭所有page-section
+        document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
         atlas.hidden = false;
         document.body.classList.add('atlas-open');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -436,11 +442,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 打开图鉴后，如果点击其它导航项，则退出图鉴模式并回到配队页对应位置
-    document.querySelectorAll('.nav-link:not([data-open-atlas])').forEach(link => {
+    document.querySelectorAll('.nav-link:not([data-open-atlas]):not([data-open-squad])').forEach(link => {
         link.addEventListener('click', function() {
             if (document.body.classList.contains('atlas-open')) {
                 document.body.classList.remove('atlas-open');
                 if (atlas) atlas.hidden = true;
+            }
+            if (document.body.classList.contains('squad-open')) {
+                document.body.classList.remove('squad-open');
+                const squadEl = document.getElementById('squad');
+                if (squadEl) squadEl.hidden = true;
             }
         });
     });
@@ -1072,6 +1083,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function openSquad(e) {
         if (e) e.preventDefault();
         if (!squadPage) return;
+        // 关闭atlas和page-open状态
+        document.body.classList.remove('atlas-open', 'page-open');
+        const atlasPage = document.getElementById('atlas');
+        if (atlasPage) atlasPage.setAttribute('hidden', '');
+        // 关闭所有page-section
+        document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
         squadPage.hidden = false;
         document.body.classList.add('squad-open');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3020,6 +3037,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('编队模拟模块已加载');
 
+    // ========== 干员头像URL查找表 ==========
+    function buildAvatarMap() {
+        const map = {};
+        document.querySelectorAll('.atlas-operator-card[data-atlas-name][data-atlas-avatar]').forEach(card => {
+            map[card.dataset.atlasName] = card.dataset.atlasAvatar;
+        });
+        return map;
+    }
+
     // ========== 配队广场 ==========
     const COMMUNITY_KEY = 'arknights_community_squads';
 
@@ -3059,10 +3085,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 ops = squad.ops;
             }
             const opsHtml = ops.map(o => `<span class="comm-card-v-op">${escapeHtml(o)}</span>`).join('');
-            // Avatar row: show first 6 operator initials in colored circles
+            // Avatar row: show first 6 operator avatars
             const avatarOps = ops.slice(0, 6);
+            const avatarMap = buildAvatarMap();
             const avatarHtml = avatarOps.length > 0
                 ? `<div class="comm-card-avatars">${avatarOps.map((o, i) => {
+                    const avatarUrl = avatarMap[o];
+                    if (avatarUrl) {
+                        return `<div class="comm-avatar-sm comm-avatar-img" style="border-color:rgba(255,255,255,0.15)"><img src="${avatarUrl}" alt="${escapeHtml(o)}" onerror="this.style.display='none';this.parentElement.textContent='${escapeHtml(o.charAt(0))}';this.parentElement.classList.add('comm-avatar-fallback')"></div>`;
+                    }
                     const colors = ['#e8883c','#5eb7ff','#d44','#4caf50','#c49b30','#9c27b0'];
                     return `<div class="comm-avatar-sm" style="background:${colors[i % colors.length]}">${escapeHtml(o.charAt(0))}</div>`;
                 }).join('')}${ops.length > 6 ? `<div class="comm-avatar-sm" style="background:#555">+${ops.length-6}</div>` : ''}</div>`
@@ -3276,17 +3307,23 @@ document.addEventListener('DOMContentLoaded', function() {
         origRefresh();
         if (isAdmin()) {
             const all = loadCommunitySquads();
-            renderCommunityCards('manageCommunityList', all, true);
+            if (all.length > 0) {
+                renderCommunityCards('manageCommunityList', all, true);
+            }
             const manageEmpty = document.getElementById('manageCommunityEmpty');
-            if (manageEmpty) manageEmpty.style.display = all.length ? 'none' : 'block';
+            const manageList = document.getElementById('manageCommunityList');
+            if (manageEmpty) manageEmpty.style.display = (all.length === 0) ? 'block' : 'none';
+            if (manageList) manageList.style.display = 'block';
         }
     };
 
-    // 管理列表删除
-    document.getElementById('manageCommunityList')?.addEventListener('click', function(e) {
+    // 管理列表删除（使用document级别事件委托确保能捕获）
+    document.addEventListener('click', function(e) {
+        if (!isAdmin()) return;
+        const manageList = document.getElementById('manageCommunityList');
+        if (!manageList || !manageList.contains(e.target)) return;
         const delBtn = e.target.closest('[data-del-idx]');
-        if (delBtn) {
-            if (!confirm('确定删除这条配队吗？此操作不可撤销。')) return;
+        if (delBtn && confirm('确定删除这条配队吗？此操作不可撤销。')) {
             const idx = parseInt(delBtn.getAttribute('data-del-idx'));
             const squads = loadCommunitySquads();
             if (squads[idx]) {
