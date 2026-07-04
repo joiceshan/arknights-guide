@@ -3290,7 +3290,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (found) {
             localStorage.setItem(ADMIN_KEY, 'true');
             updateAdminUI();
-            alert('登录成功！');
+            alert('登录成功！已切换到管理删除页面');
+            // 自动切到管理删除tab
+            const manageTab = document.querySelector('[data-comm-tab="manage"]');
+            if (manageTab) manageTab.click();
         } else {
             alert('用户名或密码错误');
         }
@@ -3305,32 +3308,67 @@ document.addEventListener('DOMContentLoaded', function() {
     const origRefresh = refreshCommunity;
     refreshCommunity = function() {
         origRefresh();
-        if (isAdmin()) {
-            const all = loadCommunitySquads();
-            if (all.length > 0) {
-                renderCommunityCards('manageCommunityList', all, true);
-            }
-            const manageEmpty = document.getElementById('manageCommunityEmpty');
-            const manageList = document.getElementById('manageCommunityList');
-            if (manageEmpty) manageEmpty.style.display = (all.length === 0) ? 'block' : 'none';
-            if (manageList) manageList.style.display = 'block';
-        }
+        renderManageList();
     };
+
+    function renderManageList() {
+        if (!isAdmin()) return;
+        const all = loadCommunitySquads();
+        const manageList = document.getElementById('manageCommunityList');
+        if (!manageList) return;
+        manageList.innerHTML = '';
+        manageList.style.display = 'block';
+        if (all.length === 0) {
+            manageList.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">暂无配队数据</p>';
+            return;
+        }
+        const avatarMap = buildAvatarMap();
+        all.forEach((squad, idx) => {
+            const card = document.createElement('div');
+            card.className = 'comm-card-vertical';
+            const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
+            let ops = [];
+            if (squad.code) { ops = parseSquadCode(squad.code).map(op => op.name).filter(Boolean); }
+            else if (squad.ops) { ops = squad.ops; }
+            const opsHtml = ops.map(o => `<span class="comm-card-v-op">${escapeHtml(o)}</span>`).join('');
+            const avatarOps = ops.slice(0, 6);
+            const avatarHtml = avatarOps.length > 0
+                ? `<div class="comm-card-avatars">${avatarOps.map((o, i) => {
+                    const avatarUrl = avatarMap[o];
+                    if (avatarUrl) {
+                        return `<div class="comm-avatar-sm comm-avatar-img" style="border-color:rgba(255,255,255,0.15)"><img src="${avatarUrl}" alt="${escapeHtml(o)}" onerror="this.style.display='none';this.parentElement.textContent='${escapeHtml(o.charAt(0))}'"></div>`;
+                    }
+                    const colors = ['#e8883c','#5eb7ff','#d44','#4caf50','#c49b30','#9c27b0'];
+                    return `<div class="comm-avatar-sm" style="background:${colors[i % colors.length]}">${escapeHtml(o.charAt(0))}</div>`;
+                }).join('')}${ops.length > 6 ? `<div class="comm-avatar-sm" style="background:#555">+${ops.length-6}</div>` : ''}</div>`
+                : '';
+            card.innerHTML = `
+                <div class="comm-card-body">
+                    <h4 class="comm-card-v-title">${escapeHtml(squad.title)}</h4>
+                    <div class="comm-card-v-meta">${escapeHtml(squad.author || '匿名博士')} · ${dateStr}</div>
+                    ${avatarHtml}
+                    ${opsHtml ? `<div class="comm-card-v-ops">${opsHtml}</div>` : ''}
+                    <div class="comm-card-v-desc">${escapeHtml(squad.desc)}</div>
+                    <div class="comm-card-v-actions">
+                        <button data-manage-del="${idx}" style="color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:0.85rem">&#128465; 删除此配队</button>
+                    </div>
+                </div>
+            `;
+            manageList.appendChild(card);
+        });
+    }
 
     // 管理列表删除（使用document级别事件委托确保能捕获）
     document.addEventListener('click', function(e) {
-        if (!isAdmin()) return;
-        const manageList = document.getElementById('manageCommunityList');
-        if (!manageList || !manageList.contains(e.target)) return;
-        const delBtn = e.target.closest('[data-del-idx]');
-        if (delBtn && confirm('确定删除这条配队吗？此操作不可撤销。')) {
-            const idx = parseInt(delBtn.getAttribute('data-del-idx'));
-            const squads = loadCommunitySquads();
-            if (squads[idx]) {
-                squads.splice(idx, 1);
-                saveCommunitySquads(squads);
-                refreshCommunity();
-            }
+        const delBtn = e.target.closest('[data-manage-del]');
+        if (!delBtn) return;
+        if (!confirm('确定删除这条配队吗？此操作不可撤销。')) return;
+        const idx = parseInt(delBtn.getAttribute('data-manage-del'));
+        const squads = loadCommunitySquads();
+        if (squads[idx]) {
+            squads.splice(idx, 1);
+            saveCommunitySquads(squads);
+            refreshCommunity();
         }
     });
 
