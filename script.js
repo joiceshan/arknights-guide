@@ -3046,16 +3046,105 @@ document.addEventListener('DOMContentLoaded', function() {
         return map;
     }
 
-    // ========== 配队广场 ==========
-    const COMMUNITY_KEY = 'arknights_community_squads';
+    // ========== 配队广场（Supabase 云端） ==========
+    const SUPABASE_URL = 'https://fgoaxqxgxfjulbpjbic.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_13ugEWVEme_sh0H13NuhGA_2crmbRBd';
+    const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    let cachedSquads = [];
+    let loadingSquads = false;
 
-    function loadCommunitySquads() {
-        try { return JSON.parse(localStorage.getItem(COMMUNITY_KEY)) || []; }
-        catch (e) { return []; }
+    async function loadCommunitySquads() {
+        if (!supabase) return [];
+        if (loadingSquads) return cachedSquads;
+        loadingSquads = true;
+        try {
+            const { data, error } = await supabase
+                .from('community_squads')
+                .select('*')
+                .order('likes', { ascending: false })
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            cachedSquads = (data || []).map(row => ({
+                id: row.id,
+                title: row.title,
+                author: row.author || '匿名博士',
+                code: row.code || '',
+                desc: row.description || '',
+                scenes: row.scenes || [],
+                likes: row.likes || 0,
+                likedBy: row.liked_by || [],
+                time: row.created_at
+            }));
+        } catch (e) {
+            console.error('加载配队失败:', e);
+            // 降级到localStorage
+            try { cachedSquads = JSON.parse(localStorage.getItem('arknights_community_squads')) || []; } catch { cachedSquads = []; }
+        }
+        loadingSquads = false;
+        return cachedSquads;
     }
 
-    function saveCommunitySquads(squads) {
-        localStorage.setItem(COMMUNITY_KEY, JSON.stringify(squads));
+    async function saveCommunitySquad(squad) {
+        if (!supabase) return false;
+        try {
+            const { error } = await supabase.from('community_squads').insert({
+                title: squad.title,
+                author: squad.author || '匿名博士',
+                code: squad.code || '',
+                description: squad.desc || '',
+                scenes: squad.scenes || [],
+                likes: 0,
+                liked_by: []
+            });
+            if (error) throw error;
+            cachedSquads = [];
+            return true;
+        } catch (e) {
+            console.error('发布配队失败:', e);
+            return false;
+        }
+    }
+
+    async function toggleLikeFromCloud(idx) {
+        if (!supabase || !cachedSquads[idx]) return;
+        const squad = cachedSquads[idx];
+        const visitorId = localStorage.getItem('arknights_visitor_id') || (function() {
+            const id = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('arknights_visitor_id', id);
+            return id;
+        })();
+
+        try {
+            const alreadyLiked = (squad.likedBy || []).includes(visitorId);
+            const newLikes = alreadyLiked ? Math.max(0, squad.likes - 1) : squad.likes + 1;
+            const newLikedBy = alreadyLiked
+                ? (squad.likedBy || []).filter(v => v !== visitorId)
+                : [...(squad.likedBy || []), visitorId];
+
+            const { error } = await supabase
+                .from('community_squads')
+                .update({ likes: newLikes, liked_by: newLikedBy })
+                .eq('id', squad.id);
+            if (error) throw error;
+            cachedSquads[idx].likes = newLikes;
+            cachedSquads[idx].likedBy = newLikedBy;
+        } catch (e) {
+            console.error('点赞失败:', e);
+        }
+    }
+
+    async function deleteSquadFromCloud(idx) {
+        if (!supabase || !cachedSquads[idx]) return;
+        try {
+            const { error } = await supabase
+                .from('community_squads')
+                .delete()
+                .eq('id', cachedSquads[idx].id);
+            if (error) throw error;
+            cachedSquads.splice(idx, 1);
+        } catch (e) {
+            console.error('删除失败:', e);
+        }
     }
 
     function renderCommunityCards(containerId, squads, showDelete) {
@@ -3117,8 +3206,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function refreshCommunity() {
-        const all = loadCommunitySquads();
+    async function refreshCommunity() {
+        const all = await loadCommunitySquads();
         renderCommunityCards('communityList', all, false);
         const myAuthor = document.getElementById('publishAuthor')?.value?.trim() || '';
         const mine = myAuthor ? all.filter(s => s.author === myAuthor) : [];
@@ -3140,29 +3229,30 @@ document.addEventListener('DOMContentLoaded', function() {
             if (contentEl) contentEl.classList.add('active');
             if (tabName === 'list' || tabName === 'my') refreshCommunity();
             if (tabName === 'manage') {
-                const allSquads = loadCommunitySquads();
-                const manageList = document.getElementById('manageCommunityList');
-                if (manageList) {
-                    manageList.innerHTML = '';
-                    if (!allSquads || allSquads.length === 0) {
-                        manageList.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">暂无配队数据</p>';
-                    } else {
-                        allSquads.forEach(function(squad, idx) {
-                            const card = document.createElement('div');
-                            card.className = 'comm-card-vertical';
-                            const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
-                            card.innerHTML = '<div class="comm-card-body">' +
-                                '<h4 class="comm-card-v-title">' + escapeHtml(squad.title) + '</h4>' +
-                                '<div class="comm-card-v-meta">' + escapeHtml(squad.author || '匿名博士') + ' · ' + dateStr + '</div>' +
-                                '<div class="comm-card-v-desc">' + escapeHtml(squad.desc) + '</div>' +
-                                '<div class="comm-card-v-actions">' +
-                                    '<button data-manage-del="' + idx + '" style="color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:0.85rem">&#128465; 删除此配队</button>' +
-                                '</div>' +
-                            '</div>';
-                            manageList.appendChild(card);
-                        });
+                loadCommunitySquads().then(function(allSquads) {
+                    const manageList = document.getElementById('manageCommunityList');
+                    if (manageList) {
+                        manageList.innerHTML = '';
+                        if (!allSquads || allSquads.length === 0) {
+                            manageList.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">暂无配队数据</p>';
+                        } else {
+                            allSquads.forEach(function(squad, idx) {
+                                const card = document.createElement('div');
+                                card.className = 'comm-card-vertical';
+                                const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
+                                card.innerHTML = '<div class="comm-card-body">' +
+                                    '<h4 class="comm-card-v-title">' + escapeHtml(squad.title) + '</h4>' +
+                                    '<div class="comm-card-v-meta">' + escapeHtml(squad.author || '匿名博士') + ' · ' + dateStr + '</div>' +
+                                    '<div class="comm-card-v-desc">' + escapeHtml(squad.desc) + '</div>' +
+                                    '<div class="comm-card-v-actions">' +
+                                        '<button data-manage-del="' + idx + '" style="color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:0.85rem">&#128465; 删除此配队</button>' +
+                                    '</div>' +
+                                '</div>';
+                                manageList.appendChild(card);
+                            });
+                        }
                     }
-                }
+                });
             }
         });
     }
@@ -3170,7 +3260,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 发布按钮
     const publishBtn = document.getElementById('publishBtn');
     if (publishBtn) {
-        publishBtn.addEventListener('click', function() {
+        publishBtn.addEventListener('click', async function() {
             const title = document.getElementById('publishTitle')?.value?.trim();
             const desc = document.getElementById('publishDesc')?.value?.trim();
             const code = document.getElementById('publishCode')?.value?.trim();
@@ -3180,22 +3270,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!title) { alert('请填写配队名称'); return; }
             if (!code) { alert('请填写编队代码'); return; }
 
-            // 优先解析编队代码格式 name:skill:mastery|...
-            let ops = parseSquadCode(code).map(o => o.name);
-            // 如果解析不到，尝试按分隔符拆分纯文本
-            if (!ops.length) {
-                ops = code.split(/[,，、\s]+/).filter(Boolean);
-            }
-            if (ops.length > 12) ops.splice(12);
+            publishBtn.disabled = true;
+            publishBtn.textContent = '发布中...';
 
-            const squads = loadCommunitySquads();
-            squads.unshift({
-                title, desc, code, scenes, author,
-                time: Date.now(),
-                likes: 0,
-                likedBy: []
-            });
-            saveCommunitySquads(squads);
+            const ok = await saveCommunitySquad({ title, desc, code, scenes, author });
 
             // 清空表单
             document.getElementById('publishTitle').value = '';
@@ -3203,14 +3281,18 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('publishCode').value = '';
             document.querySelectorAll('input[data-scene]').forEach(cb => cb.checked = false);
 
-            alert('发布成功！');
-            refreshCommunity();
+            publishBtn.disabled = false;
+            publishBtn.textContent = '发布配队';
 
-            // 切换到列表tab
-            commTabs.forEach(t => t.classList.remove('active'));
-            commContents.forEach(c => c.classList.remove('active'));
-            document.querySelector('[data-comm-tab="list"]').classList.add('active');
-            document.getElementById('comm-list').classList.add('active');
+            if (ok) {
+                alert('发布成功！');
+                await refreshCommunity();
+                // 切换到列表tab
+                const listTab = document.querySelector('[data-comm-tab="list"]');
+                if (listTab) listTab.click();
+            } else {
+                alert('发布失败，请稍后重试');
+            }
         });
     }
 
@@ -3221,37 +3303,23 @@ document.addEventListener('DOMContentLoaded', function() {
         catch { return []; }
     }
     function isLiked(idx) {
-        return getLikedIds().includes(String(idx));
+        const visitorId = localStorage.getItem('arknights_visitor_id');
+        return visitorId && cachedSquads[idx] && (cachedSquads[idx].likedBy || []).includes(visitorId);
     }
 
-    document.getElementById('communityList')?.addEventListener('click', function(e) {
+    document.getElementById('communityList')?.addEventListener('click', async function(e) {
         const likeBtn = e.target.closest('[data-like-idx]');
         if (likeBtn) {
-            const idx = String(likeBtn.getAttribute('data-like-idx'));
-            const squads = loadCommunitySquads();
-            if (squads[idx]) {
-                let likedIds = getLikedIds();
-                if (likedIds.includes(idx)) {
-                    // 取消点赞
-                    likedIds = likedIds.filter(id => id !== idx);
-                    squads[idx].likes = Math.max(0, (squads[idx].likes || 0) - 1);
-                } else {
-                    // 点赞
-                    likedIds.push(idx);
-                    squads[idx].likes = (squads[idx].likes || 0) + 1;
-                }
-                localStorage.setItem(LIKED_KEY, JSON.stringify(likedIds));
-                saveCommunitySquads(squads);
-                refreshCommunity();
-            }
+            const idx = parseInt(likeBtn.getAttribute('data-like-idx'));
+            await toggleLikeFromCloud(idx);
+            refreshCommunity();
             return;
         }
         const copyBtn = e.target.closest('[data-copy-code]');
         if (copyBtn) {
             const idx = parseInt(copyBtn.getAttribute('data-copy-code'));
-            const squads = loadCommunitySquads();
-            if (squads[idx] && squads[idx].code) {
-                navigator.clipboard.writeText(squads[idx].code).then(() => {
+            if (cachedSquads[idx] && cachedSquads[idx].code) {
+                navigator.clipboard.writeText(cachedSquads[idx].code).then(() => {
                     alert('编队代码已复制！可在编队模拟页面粘贴导入。');
                 }).catch(() => alert('复制失败，请手动复制'));
             }
@@ -3259,20 +3327,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('myCommunityList')?.addEventListener('click', function(e) {
+    document.getElementById('myCommunityList')?.addEventListener('click', async function(e) {
         const delBtn = e.target.closest('[data-del-idx]');
         if (delBtn) {
             if (!confirm('确定删除这条配队吗？')) return;
             const idx = parseInt(delBtn.getAttribute('data-del-idx'));
-            const squads = loadCommunitySquads();
-            const myAuthor = document.getElementById('publishAuthor')?.value?.trim() || '';
-            const mine = myAuthor ? squads.filter(s => s.author === myAuthor) : [];
-            const toDel = mine[idx];
-            if (toDel) {
-                const newSquads = squads.filter(s => s !== toDel);
-                saveCommunitySquads(newSquads);
-                refreshCommunity();
-            }
+            await deleteSquadFromCloud(idx);
+            refreshCommunity();
         }
     });
 
@@ -3387,16 +3448,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 管理列表删除（使用document级别事件委托确保能捕获）
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', async function(e) {
         const delBtn = e.target.closest('[data-manage-del]');
         if (!delBtn) return;
         if (!confirm('确定删除这条配队吗？此操作不可撤销。')) return;
         const idx = parseInt(delBtn.getAttribute('data-manage-del'));
-        const squads = loadCommunitySquads();
-        if (squads[idx]) {
-            squads.splice(idx, 1);
-            saveCommunitySquads(squads);
-            refreshCommunity();
+        await deleteSquadFromCloud(idx);
+        // 重新渲染管理列表
+        const allSquads = await loadCommunitySquads();
+        const manageList = document.getElementById('manageCommunityList');
+        if (manageList) {
+            manageList.innerHTML = '';
+            if (allSquads.length === 0) {
+                manageList.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">暂无配队数据</p>';
+            } else {
+                allSquads.forEach(function(squad, idx2) {
+                    const card = document.createElement('div');
+                    card.className = 'comm-card-vertical';
+                    const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
+                    card.innerHTML = '<div class="comm-card-body">' +
+                        '<h4 class="comm-card-v-title">' + escapeHtml(squad.title) + '</h4>' +
+                        '<div class="comm-card-v-meta">' + escapeHtml(squad.author || '匿名博士') + ' · ' + dateStr + '</div>' +
+                        '<div class="comm-card-v-desc">' + escapeHtml(squad.desc) + '</div>' +
+                        '<div class="comm-card-v-actions">' +
+                            '<button data-manage-del="' + idx2 + '" style="color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:0.85rem">&#128465; 删除此配队</button>' +
+                        '</div>' +
+                    '</div>';
+                    manageList.appendChild(card);
+                });
+            }
         }
     });
 
