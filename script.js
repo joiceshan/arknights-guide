@@ -3134,9 +3134,35 @@ document.addEventListener('DOMContentLoaded', function() {
             commTabs.forEach(t => t.classList.remove('active'));
             commContents.forEach(c => c.classList.remove('active'));
             this.classList.add('active');
-            document.getElementById('comm-' + tabName).classList.add('active');
+            const contentEl = document.getElementById('comm-' + tabName);
+            if (contentEl) contentEl.classList.add('active');
             if (tabName === 'list' || tabName === 'my') refreshCommunity();
-            if (tabName === 'manage') renderManageList();
+            if (tabName === 'manage') {
+                // 直接内联渲染管理删除列表，不依赖外部函数
+                const allSquads = loadCommunitySquads();
+                const manageList = document.getElementById('manageCommunityList');
+                if (manageList) {
+                    manageList.innerHTML = '';
+                    if (!allSquads || allSquads.length === 0) {
+                        manageList.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">暂无配队数据</p>';
+                    } else {
+                        allSquads.forEach(function(squad, idx) {
+                            const card = document.createElement('div');
+                            card.className = 'comm-card-vertical';
+                            const dateStr = squad.time ? new Date(squad.time).toLocaleDateString('zh-CN') : '';
+                            card.innerHTML = '<div class="comm-card-body">' +
+                                '<h4 class="comm-card-v-title">' + escapeHtml(squad.title) + '</h4>' +
+                                '<div class="comm-card-v-meta">' + escapeHtml(squad.author || '匿名博士') + ' · ' + dateStr + '</div>' +
+                                '<div class="comm-card-v-desc">' + escapeHtml(squad.desc) + '</div>' +
+                                '<div class="comm-card-v-actions">' +
+                                    '<button data-manage-del="' + idx + '" style="color:#f87171;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:0.85rem">&#128465; 删除此配队</button>' +
+                                '</div>' +
+                            '</div>';
+                            manageList.appendChild(card);
+                        });
+                    }
+                }
+            }
         });
     });
 
