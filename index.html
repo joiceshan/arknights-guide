@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
     <!-- 封面 -->
@@ -3534,50 +3534,7 @@
             </div>
         </section>
 
-        <div class="atlas-detail-modal" id="atlasDetailModal" hidden>
-            <div class="atlas-detail-backdrop" data-close-atlas-detail></div>
-            <article class="atlas-detail-card" role="dialog" aria-modal="true" aria-labelledby="atlasDetailName">
-                <button class="atlas-detail-close" type="button" data-close-atlas-detail>×</button>
-                <div class="atlas-detail-top">
-                    <div>
-                        <p class="atlas-detail-kicker" id="atlasDetailClass">干员档案</p>
-                        <h3 id="atlasDetailName">干员名称</h3>
-                        <p class="atlas-detail-subtitle" id="atlasDetailSubtitle">星级 · 职业分支</p>
-                    </div>
-                    <span class="atlas-detail-limited" id="atlasDetailLimited">限定</span>
-                </div>
-                <div class="atlas-gallery" id="atlasGallery">
-                    <button class="atlas-gallery-arrow atlas-gallery-prev" type="button" data-gallery-prev aria-label="上一张">‹</button>
-                    <img class="atlas-gallery-image" id="atlasGalleryImage" alt="干员立绘">
-                    <button class="atlas-gallery-arrow atlas-gallery-next" type="button" data-gallery-next aria-label="下一张">›</button>
-                    <div class="atlas-gallery-caption" id="atlasGalleryCaption">立绘</div>
-                    <div class="atlas-gallery-dots" id="atlasGalleryDots"></div>
-                </div>
-                <div class="atlas-detail-grid" id="atlasDetailGrid"></div>
-                <div class="atlas-detail-section">
-                    <h4>特性</h4>
-                    <p id="atlasDetailTrait">未知</p>
-                </div>
-                <div class="atlas-detail-section atlas-skill-section">
-                    <div class="atlas-skill-header">
-                        <h4>干员技能</h4>
-                        <a class="atlas-skill-source" id="atlasSkillSource" href="#" target="_blank" rel="noopener">前往 PRTS 查看</a>
-                    </div>
-                    <div class="atlas-skills" id="atlasDetailSkills">
-                        <p class="atlas-skill-status">打开干员详情后自动读取技能数据。</p>
-                    </div>
-                </div>
-                <div class="atlas-detail-section atlas-pair-section">
-                    <div class="atlas-pair-header">
-                        <h4>建议搭配</h4>
-                        <button class="atlas-skill-toggle" type="button" id="atlasPairToggle">展开搭配建议 &#9662;</button>
-                    </div>
-                    <div class="atlas-pair-content" id="atlasPairContent" hidden>
-                        <p class="atlas-skill-status">正在加载搭配建议...</p>
-                    </div>
-                </div>
-            </article>
-        </div>
+        
 
 
                 <!-- 干员推荐入口 -->
@@ -4377,6 +4334,52 @@
         
     </main>
 
+<div class="atlas-detail-modal" id="atlasDetailModal" hidden>
+            <div class="atlas-detail-backdrop" data-close-atlas-detail></div>
+            <article class="atlas-detail-card" role="dialog" aria-modal="true" aria-labelledby="atlasDetailName">
+                <button class="atlas-detail-close" type="button" data-close-atlas-detail>×</button>
+                <div class="atlas-detail-top">
+                    <div>
+                        <p class="atlas-detail-kicker" id="atlasDetailClass">干员档案</p>
+                        <h3 id="atlasDetailName">干员名称</h3>
+                        <p class="atlas-detail-subtitle" id="atlasDetailSubtitle">星级 · 职业分支</p>
+                    </div>
+                    <span class="atlas-detail-limited" id="atlasDetailLimited">限定</span>
+                </div>
+                <div class="atlas-gallery" id="atlasGallery">
+                    <button class="atlas-gallery-arrow atlas-gallery-prev" type="button" data-gallery-prev aria-label="上一张">‹</button>
+                    <img class="atlas-gallery-image" id="atlasGalleryImage" alt="干员立绘">
+                    <button class="atlas-gallery-arrow atlas-gallery-next" type="button" data-gallery-next aria-label="下一张">›</button>
+                    <div class="atlas-gallery-caption" id="atlasGalleryCaption">立绘</div>
+                    <div class="atlas-gallery-dots" id="atlasGalleryDots"></div>
+                </div>
+                <div class="atlas-detail-grid" id="atlasDetailGrid"></div>
+                <div class="atlas-detail-section">
+                    <h4>特性</h4>
+                    <p id="atlasDetailTrait">未知</p>
+                </div>
+                <div class="atlas-detail-section atlas-skill-section">
+                    <div class="atlas-skill-header">
+                        <h4>干员技能</h4>
+                        <a class="atlas-skill-source" id="atlasSkillSource" href="#" target="_blank" rel="noopener">前往 PRTS 查看</a>
+                    </div>
+                    <div class="atlas-skills" id="atlasDetailSkills">
+                        <p class="atlas-skill-status">打开干员详情后自动读取技能数据。</p>
+                    </div>
+                </div>
+                <div class="atlas-detail-section atlas-pair-section">
+                    <div class="atlas-pair-header">
+                        <h4>建议搭配</h4>
+                        <button class="atlas-skill-toggle" type="button" id="atlasPairToggle">展开搭配建议 &#9662;</button>
+                    </div>
+                    <div class="atlas-pair-content" id="atlasPairContent" hidden>
+                        <p class="atlas-skill-status">正在加载搭配建议...</p>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+
     <!-- 干员选择弹窗 -->
     <div class="squad-select-modal" id="squadSelectModal" hidden>
         <div class="squad-modal-backdrop" data-close-squad-select></div>
@@ -4485,8 +4488,8 @@
     </footer>
 
     <script src="operator_modules.js"></script>
-    <script src="operator_skills.js?v=10"></script>
-    <script src="script.js?v=10"></script>
+    <script src="operator_skills.js?v=11"></script>
+    <script src="script.js?v=11"></script>
 </body>
 </html>
 

@@ -3617,8 +3617,8 @@ body.page-open {
     overflow-x: hidden;
 }
 
+/* page-open时只隐藏header和入口卡片，保留nav-bar让用户可以导航 */
 body.page-open .header,
-body.page-open .nav-bar,
 body.page-open .container > .squad-entry-section,
 body.page-open .container > .atlas-entry-section,
 body.page-open .container > .section:not(.page-section):not(.squad-page):not(.atlas-page),
