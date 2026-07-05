@@ -3047,8 +3047,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ========== 配队广场（Supabase 云端） ==========
-    const SUPABASE_URL = 'https://fgoaxqxgxfjulbpjbic.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_13ugEWVEme_sh0H13NuhGA_2crmbRBd';
+    const SUPABASE_URL = 'https://fgoaxqxxgfxjulbpjbic.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2F4cXh4Z2Z4anVsYnBqYmljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjY1NzYsImV4cCI6MjA5ODc0MjU3Nn0.8UYUzZiESpRdfOLTsOg16PYxx8GQbiZ4SCeK--CLsVU';
     const supabase = (window.supabase && window.supabase.createClient)
         ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
         : null;
