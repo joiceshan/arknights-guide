@@ -3076,6 +3076,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 scenes: row.scenes || [],
                 likes: row.likes || 0,
                 likedBy: row.liked_by || [],
+                authorId: row.author_id || '',
                 time: row.created_at
             }));
         } catch (e) {
@@ -3090,9 +3091,15 @@ document.addEventListener('DOMContentLoaded', function() {
     async function saveCommunitySquad(squad) {
         if (!supabase) return false;
         try {
+            const visitorId = localStorage.getItem('arknights_visitor_id') || (function() {
+                const id = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('arknights_visitor_id', id);
+                return id;
+            })();
             const { error } = await supabase.from('community_squads').insert({
                 title: squad.title,
                 author: squad.author || '匿名博士',
+                author_id: visitorId,
                 code: squad.code || '',
                 description: squad.desc || '',
                 scenes: squad.scenes || [],
@@ -3165,6 +3172,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (emptyEl) emptyEl.style.display = 'none';
 
+        const visitorId = localStorage.getItem('arknights_visitor_id') || '';
+
         squads.forEach((squad, idx) => {
             const card = document.createElement('div');
             card.className = 'comm-card-vertical';
@@ -3191,6 +3200,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return `<div class="comm-avatar-sm" style="background:${colors[i % colors.length]}">${escapeHtml(o.charAt(0))}</div>`;
                 }).join('')}${ops.length > 6 ? `<div class="comm-avatar-sm" style="background:#555">+${ops.length-6}</div>` : ''}</div>`
                 : '';
+            // 判断是否显示删除按钮：管理员可删所有，访问者可删自己的
+            const isOwnSquad = visitorId && squad.authorId === visitorId;
+            const canDelete = showDelete || isAdmin() || isOwnSquad;
             card.innerHTML = `
                 <div class="comm-card-body">
                     <h4 class="comm-card-v-title">${escapeHtml(squad.title)}</h4>
@@ -3202,7 +3214,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="comm-card-v-actions">
                         <button data-like-idx="${idx}">&#128077; ${isLiked(idx) ? '已点赞' : '点赞'} (${squad.likes || 0})</button>
                         ${squad.code ? `<button data-copy-code="${idx}">&#128203; 复制编队代码</button>` : ''}
-                        ${showDelete ? `<button data-del-idx="${idx}" style="color:#f87171">删除</button>` : ''}
+                        ${canDelete ? `<button data-del-idx="${idx}" style="color:#f87171">&#128465; 删除</button>` : ''}
                     </div>
                 </div>
             `;
@@ -3327,6 +3339,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('编队代码已复制！可在编队模拟页面粘贴导入。');
                 }).catch(() => alert('复制失败，请手动复制'));
             }
+            return;
+        }
+        const delBtn = e.target.closest('[data-del-idx]');
+        if (delBtn) {
+            if (!confirm('确定删除这条配队吗？')) return;
+            const idx = parseInt(delBtn.getAttribute('data-del-idx'));
+            await deleteSquadFromCloud(idx);
+            await refreshCommunity();
             return;
         }
     });
