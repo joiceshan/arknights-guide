@@ -3392,10 +3392,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // manage tab也触发refresh
-    commTabs.forEach(tab => {
-        // 已有事件，在refreshCommunity中加入manage
-    });
+    // manage tab切换已在事件委托中处理
 
     // 在refreshCommunity中追加管理列表
     const origRefresh = refreshCommunity;
