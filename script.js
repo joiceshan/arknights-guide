@@ -3049,7 +3049,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== 配队广场（Supabase 云端） ==========
     const SUPABASE_URL = 'https://fgoaxqxgxfjulbpjbic.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_13ugEWVEme_sh0H13NuhGA_2crmbRBd';
-    const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    const supabase = (window.supabase && window.supabase.createClient)
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
+    console.log('[配队广场] Supabase 连接状态:', supabase ? '已连接' : '未连接（SDK未加载或初始化失败）');
     let cachedSquads = [];
     let loadingSquads = false;
 
@@ -3098,9 +3101,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (error) throw error;
             cachedSquads = [];
+            console.log('[配队广场] 发布成功');
             return true;
         } catch (e) {
-            console.error('发布配队失败:', e);
+            console.error('[配队广场] 发布失败:', e.message || e);
             return false;
         }
     }
