@@ -3515,6 +3515,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const allOps = getAllOperatorsFromDOM();
         const el = document.getElementById('boxCount');
         if (el) el.textContent = '已选 ' + myBoxOperators.length + ' / ' + allOps.length;
+        // 更新Box汇总
+        updateMyBoxSummary();
+    }
+
+    function updateMyBoxSummary() {
+        const summary = document.getElementById('myboxSummary');
+        const opsEl = document.getElementById('myboxSummaryOps');
+        const countEl = document.getElementById('myboxSummaryCount');
+        if (!summary || !opsEl) return;
+        if (myBoxOperators.length === 0) {
+            summary.setAttribute('hidden', '');
+            return;
+        }
+        summary.removeAttribute('hidden');
+        if (countEl) countEl.textContent = myBoxOperators.length;
+        opsEl.innerHTML = '';
+        const avatarMap = buildAvatarMap();
+        myBoxOperators.forEach(name => {
+            const url = avatarMap[name];
+            const el = document.createElement('div');
+            el.className = 'ms-op';
+            el.innerHTML = `${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}`;
+            opsEl.appendChild(el);
+        });
     }
 
     // Box筛选
@@ -3917,6 +3941,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', async function() {
             await loadMyBox();
             renderBoxOperators();
+            updateMyBoxSummary();
             loadOtherBoxes();
         });
     });

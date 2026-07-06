@@ -3955,6 +3955,39 @@ body.page-open #atlas-entry {
     margin-top: 1px;
 }
 
+/* ========== 我的Box汇总 ========== */
+.mybox-summary {
+    margin-top: 20px;
+    padding: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+.mybox-summary-ops {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 5px;
+}
+.mybox-summary-ops .ms-op {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+.mybox-summary-ops .ms-op img {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+}
+
 /* ========== 其他博士的Box ========== */
 .other-boxes-section {
     margin-top: 30px;
