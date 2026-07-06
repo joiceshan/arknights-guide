@@ -3437,13 +3437,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 从全干员图鉴DOM中提取干员列表
+    function getAllOperatorsFromDOM() {
+        const cards = document.querySelectorAll('.atlas-operator-card');
+        const ops = [];
+        cards.forEach(card => {
+            ops.push({
+                name: card.dataset.atlasName || '',
+                class: card.dataset.atlasClass || '',
+                rarity: card.dataset.atlasRarity || '',
+                branch: card.dataset.atlasBranch || ''
+            });
+        });
+        return ops;
+    }
+
     function renderBoxOperators() {
         const grid = document.getElementById('boxOperatorGrid');
         if (!grid) return;
         const search = (document.getElementById('boxSearch')?.value || '').trim();
         grid.innerHTML = '';
 
-        const allOps = window.operators || [];
+        const allOps = getAllOperatorsFromDOM();
         const filtered = allOps.filter(op => {
             if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
             if (search && !op.name.includes(search)) return false;
@@ -3477,7 +3492,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateBoxCount() {
-        const allOps = window.operators || [];
+        const allOps = getAllOperatorsFromDOM();
         const el = document.getElementById('boxCount');
         if (el) el.textContent = '已选 ' + myBoxOperators.length + ' / ' + allOps.length;
     }
@@ -3499,7 +3514,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 全选/清空
     document.getElementById('boxSelectAll')?.addEventListener('click', function() {
-        const allOps = window.operators || [];
+        const allOps = getAllOperatorsFromDOM();
         const search = (document.getElementById('boxSearch')?.value || '').trim();
         const filtered = allOps.filter(op => {
             if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
@@ -3513,7 +3528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('boxClearAll')?.addEventListener('click', function() {
-        const allOps = window.operators || [];
+        const allOps = getAllOperatorsFromDOM();
         const search = (document.getElementById('boxSearch')?.value || '').trim();
         const filtered = allOps.filter(op => {
             if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
