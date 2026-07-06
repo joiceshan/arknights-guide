@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=60">
+    <link rel="stylesheet" href="style.css?v=70">
 </head>
 <body>
+    <!-- 全局返回导航 -->
+    <nav class="global-back-nav" id="globalBackNav">
+        <button class="global-back-btn" type="button" id="globalBackBtn">&#8592; 返回首页</button>
+    </nav>
     <!-- 封面 -->
     <div class="cover-page" id="coverPage">
         <div class="cover-bg-slides" id="coverBgSlides"></div>
@@ -4347,6 +4351,7 @@
             <div class="page-header">
                 <h2 style="font-size:1.8rem; color:var(--accent-gold);">我的Box</h2>
                 <div style="display:flex;gap:10px;align-items:center;">
+                    <input type="text" id="playerNameInput" placeholder="你的博士名称" maxlength="20" style="padding:6px 12px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:0.85rem;width:140px;">
                     <button class="atlas-back-btn" type="button" id="saveMyBoxBtn">保存Box</button>
                     <button class="atlas-back-btn" type="button" id="publishBoxHelpBtn">发布求助</button>
                     <button class="atlas-back-btn" type="button" data-close-page="mybox">返回首页</button>
@@ -4375,6 +4380,12 @@
                 </div>
             </div>
             <div class="box-operator-grid" id="boxOperatorGrid"></div>
+
+            <!-- 其他博士的Box -->
+            <div class="other-boxes-section" id="otherBoxesSection" hidden>
+                <h3 class="section-title" style="margin-top:30px;font-size:1.2rem;"><span class="icon">&#128101;</span>其他博士的Box</h3>
+                <div id="otherBoxesList"></div>
+            </div>
         </section>
 
         <!-- Box求助广场 -->
@@ -4576,7 +4587,7 @@
     <script src="operator_modules.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="operator_skills.js?v=14"></script>
-    <script src="script.js?v=61"></script>
+    <script src="script.js?v=70"></script>
 </body>
 </html>
 

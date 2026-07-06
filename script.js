@@ -3401,11 +3401,15 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const { data, error } = await supabase
                 .from('player_boxes')
-                .select('operators')
+                .select('operators, player_name')
                 .eq('visitor_id', getVisitorId())
                 .maybeSingle();
             if (error) throw error;
             myBoxOperators = (data && data.operators) || [];
+            if (data && data.player_name) {
+                const nameInput = document.getElementById('playerNameInput');
+                if (nameInput && !nameInput.value) nameInput.value = data.player_name;
+            }
         } catch (e) {
             console.error('[Box] 加载失败:', e);
             myBoxOperators = [];
@@ -3414,6 +3418,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function saveMyBox(operators) {
         if (!supabase) return false;
+        const playerName = document.getElementById('playerNameInput')?.value?.trim() || '匿名博士';
+        // 保存名称到 localStorage 备用
+        localStorage.setItem('arknights_player_name', playerName);
         try {
             const { data: existing } = await supabase
                 .from('player_boxes')
@@ -3421,10 +3428,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 .eq('visitor_id', getVisitorId())
                 .maybeSingle();
             if (existing) {
-                await supabase.from('player_boxes').update({ operators, updated_at: new Date().toISOString() }).eq('id', existing.id);
+                await supabase.from('player_boxes').update({ operators, player_name: playerName, updated_at: new Date().toISOString() }).eq('id', existing.id);
             } else {
                 await supabase.from('player_boxes').insert({
-                    player_name: document.getElementById('publishAuthor')?.value?.trim() || '匿名博士',
+                    player_name: playerName,
                     visitor_id: getVisitorId(),
                     operators
                 });
@@ -3437,17 +3444,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 从全干员图鉴DOM中提取干员列表
+    // 星级数值（用于排序）
+    function rarityNum(r) {
+        const m = r ? r.match(/\d/) : null;
+        return m ? parseInt(m[0]) : 0;
+    }
+
+    // 从全干员图鉴DOM中提取干员列表（按星级降序+名字排序）
     function getAllOperatorsFromDOM() {
         const cards = document.querySelectorAll('.atlas-operator-card');
         const ops = [];
         cards.forEach(card => {
             ops.push({
                 name: card.dataset.atlasName || '',
-                class: card.dataset.atlasClass || '',
+                cls: card.dataset.atlasClass || '',
                 rarity: card.dataset.atlasRarity || '',
                 branch: card.dataset.atlasBranch || ''
             });
+        });
+        // 按星级降序，同星级按名字排序
+        ops.sort((a, b) => {
+            const ra = rarityNum(a.rarity), rb = rarityNum(b.rarity);
+            if (ra !== rb) return rb - ra;
+            return a.name.localeCompare(b.name, 'zh-CN');
         });
         return ops;
     }
@@ -3458,9 +3477,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const search = (document.getElementById('boxSearch')?.value || '').trim();
         grid.innerHTML = '';
 
-        const allOps = getAllOperatorsFromDOM();
+        let allOps = getAllOperatorsFromDOM();
         const filtered = allOps.filter(op => {
-            if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
+            if (currentBoxFilter !== 'all' && op.cls !== currentBoxFilter) return false;
             if (search && !op.name.includes(search)) return false;
             return true;
         });
@@ -3471,10 +3490,11 @@ document.addEventListener('DOMContentLoaded', function() {
             el.className = 'box-op-item' + (myBoxOperators.includes(op.name) ? ' selected' : '');
             el.dataset.name = op.name;
             const avatarUrl = avatarMap[op.name];
+            const starsHtml = '&#9733;'.repeat(rarityNum(op.rarity));
             el.innerHTML = `
                 <img src="${avatarUrl || ''}" alt="${escapeHtml(op.name)}" onerror="this.style.display='none'" loading="lazy">
                 <span class="box-op-name">${escapeHtml(op.name)}</span>
-                <span class="box-op-class">${escapeHtml(op.class)}</span>
+                <span class="box-op-stars">${starsHtml}</span>
             `;
             el.addEventListener('click', function() {
                 if (myBoxOperators.includes(op.name)) {
@@ -3517,7 +3537,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const allOps = getAllOperatorsFromDOM();
         const search = (document.getElementById('boxSearch')?.value || '').trim();
         const filtered = allOps.filter(op => {
-            if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
+            if (currentBoxFilter !== 'all' && op.cls !== currentBoxFilter) return false;
             if (search && !op.name.includes(search)) return false;
             return true;
         });
@@ -3531,7 +3551,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const allOps = getAllOperatorsFromDOM();
         const search = (document.getElementById('boxSearch')?.value || '').trim();
         const filtered = allOps.filter(op => {
-            if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
+            if (currentBoxFilter !== 'all' && op.cls !== currentBoxFilter) return false;
             if (search && !op.name.includes(search)) return false;
             return true;
         });
@@ -3723,10 +3743,69 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 页面打开时加载数据
+    // 加载其他博士的Box列表
+    async function loadOtherBoxes() {
+        if (!supabase) return;
+        try {
+            const { data, error } = await supabase
+                .from('player_boxes')
+                .select('*')
+                .neq('visitor_id', getVisitorId())
+                .order('updated_at', { ascending: false })
+                .limit(20);
+            if (error) throw error;
+            const section = document.getElementById('otherBoxesSection');
+            const list = document.getElementById('otherBoxesList');
+            if (!section || !list) return;
+            if (!data || data.length === 0) {
+                section.setAttribute('hidden', '');
+                return;
+            }
+            section.removeAttribute('hidden');
+            list.innerHTML = '';
+            const avatarMap = buildAvatarMap();
+            data.forEach(box => {
+                const card = document.createElement('div');
+                card.className = 'other-box-card';
+                const ops = box.operators || [];
+                const previewNames = ops.slice(0, 10);
+                const previewHtml = previewNames.map(name => {
+                    const url = avatarMap[name];
+                    return `<span class="obox-op-tag">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}</span>`;
+                }).join('');
+                const dateStr = box.updated_at ? new Date(box.updated_at).toLocaleDateString('zh-CN') : '';
+                card.innerHTML = `
+                    <h4>${escapeHtml(box.player_name || '匿名博士')}</h4>
+                    <div class="obox-meta">${ops.length}名干员 · 更新于 ${dateStr}</div>
+                    <div class="obox-ops">${previewHtml}</div>
+                    ${ops.length > 10 ? `<div style="color:var(--text-muted);font-size:0.8rem;margin-top:6px">...等${ops.length}名干员</div>` : ''}
+                `;
+                // 点击展开完整Box
+                card.addEventListener('click', function() {
+                    if (card.querySelector('.other-box-detail-ops')) {
+                        card.querySelector('.other-box-detail-ops').remove();
+                        return;
+                    }
+                    const detailDiv = document.createElement('div');
+                    detailDiv.className = 'other-box-detail-ops';
+                    ops.forEach(name => {
+                        const url = avatarMap[name];
+                        detailDiv.innerHTML += `<div class="other-box-detail-op">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}</div>`;
+                    });
+                    card.appendChild(detailDiv);
+                });
+                list.appendChild(card);
+            });
+        } catch (e) {
+            console.error('[OtherBoxes] 加载失败:', e);
+        }
+    }
+
     document.querySelectorAll('[data-open-page="mybox"]').forEach(btn => {
         btn.addEventListener('click', async function() {
             await loadMyBox();
             renderBoxOperators();
+            loadOtherBoxes();
         });
     });
     document.querySelectorAll('[data-open-page="boxhelp"]').forEach(btn => {
@@ -3734,6 +3813,51 @@ document.addEventListener('DOMContentLoaded', function() {
             loadBoxRequests();
         });
     });
+
+    // ========== 全局返回导航 ==========
+    const globalBackNav = document.getElementById('globalBackNav');
+    const globalBackBtn = document.getElementById('globalBackBtn');
+
+    function updateGlobalBackNav() {
+        // 检查是否在任何子页面中
+        const isSubPage = document.body.classList.contains('page-open')
+            || document.body.classList.contains('squad-open')
+            || document.body.classList.contains('atlas-open');
+        if (globalBackNav) {
+            globalBackNav.classList.toggle('show', isSubPage);
+        }
+    }
+
+    // 监听 body class 变化
+    const bodyObserver = new MutationObserver(updateGlobalBackNav);
+    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    globalBackBtn?.addEventListener('click', function() {
+        // 关闭所有子页面
+        document.body.classList.remove('page-open', 'squad-open', 'atlas-open');
+        document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
+        const squadPage = document.getElementById('squad');
+        const atlasPage = document.getElementById('atlas');
+        if (squadPage) squadPage.setAttribute('hidden', '');
+        if (atlasPage) atlasPage.setAttribute('hidden', '');
+        // 恢复入口卡片
+        const squadEntry = document.getElementById('squad-entry');
+        const atlasEntry = document.getElementById('atlas-entry');
+        const myboxEntry = document.getElementById('mybox-entry');
+        const boxhelpEntry = document.getElementById('boxhelp-entry');
+        const communityEntry = document.getElementById('community-entry');
+        [squadEntry, atlasEntry, myboxEntry, boxhelpEntry, communityEntry].forEach(el => {
+            if (el) el.style.display = '';
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // 恢复博士名称
+    const savedName = localStorage.getItem('arknights_player_name');
+    if (savedName) {
+        const nameInput = document.getElementById('playerNameInput');
+        if (nameInput) nameInput.value = savedName;
+    }
 
     updateAdminUI();
 });
