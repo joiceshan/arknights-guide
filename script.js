@@ -4187,31 +4187,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const globalBackBtn = document.getElementById('globalBackBtn');
     let pageHistory = [];
 
-    function updateGlobalBackNav() {
-        const isSubPage = document.body.classList.contains('page-open')
-            || document.body.classList.contains('squad-open')
-            || document.body.classList.contains('atlas-open');
-        if (globalBackNav) {
-            globalBackNav.classList.toggle('show', isSubPage);
-        }
-        // 更新返回按钮文案
-        if (globalBackBtn) {
-            if (pageHistory.length > 0) {
-                const prev = pageHistory[pageHistory.length - 1];
-                // 提取中文名
-                const nameMap = { framework: '配队框架', operators: '干员推荐', teams: '实用阵容', community: '配队广场', mybox: '我的Box', boxhelp: 'Box求助', squad: '编队模拟', atlas: '全干员图鉴' };
-                const label = nameMap[prev] || '返回';
-                globalBackBtn.innerHTML = '&#8592; 返回' + (label !== '返回' ? label : '');
-            } else {
-                globalBackBtn.innerHTML = '&#8592; 返回首页';
-            }
-        }
-    }
-
-    // 监听 openPage 调用来记录历史
-    const origOpenPage = openPage;
-    openPage = function(pageId) {
-        // 记录当前状态到历史
+    function recordCurrentPage() {
         const currentPage = document.querySelector('.page-section:not([hidden])');
         if (currentPage) {
             pageHistory.push(currentPage.id);
@@ -4221,8 +4197,42 @@ document.addEventListener('DOMContentLoaded', function() {
             pageHistory.push('atlas');
         }
         if (pageHistory.length > 10) pageHistory = pageHistory.slice(-10);
-        origOpenPage(pageId);
-    };
+    }
+
+    function updateGlobalBackNav() {
+        const isSubPage = document.body.classList.contains('page-open')
+            || document.body.classList.contains('squad-open')
+            || document.body.classList.contains('atlas-open');
+        if (globalBackNav) {
+            globalBackNav.classList.toggle('show', isSubPage);
+        }
+        if (globalBackBtn) {
+            if (pageHistory.length > 0) {
+                const prev = pageHistory[pageHistory.length - 1];
+                const nameMap = { framework: '配队框架', operators: '干员推荐', teams: '实用阵容', community: '配队广场', mybox: '我的Box', boxhelp: 'Box求助', squad: '编队模拟', atlas: '全干员图鉴' };
+                const label = nameMap[prev] || '返回';
+                globalBackBtn.innerHTML = '&#8592; 返回' + (label !== '返回' ? label : '');
+            } else {
+                globalBackBtn.innerHTML = '&#8592; 返回首页';
+            }
+        }
+    }
+
+    // 在所有 [data-open-page] 点击前记录历史（捕获阶段，确保先于冒泡阶段的原有处理）
+    document.querySelectorAll('[data-open-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            recordCurrentPage();
+        }, true); // 捕获阶段
+    });
+
+    // 在 data-open-atlas 点击前记录历史（捕获阶段）
+    document.querySelectorAll('[data-open-atlas]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            recordCurrentPage();
+        }, true);
+    });
+
+    // squad 入口也由 [data-open-page] 覆盖，无需额外处理
 
     // 监听 body class 变化
     const bodyObserver = new MutationObserver(updateGlobalBackNav);
@@ -4230,9 +4240,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     globalBackBtn?.addEventListener('click', function() {
         if (pageHistory.length > 0) {
-            // 返回上一层
             const prev = pageHistory.pop();
-            // 关闭当前
+            // 关闭当前页面
             document.body.classList.remove('page-open', 'squad-open', 'atlas-open');
             document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
             const squadPage = document.getElementById('squad');
@@ -4246,26 +4255,24 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             // 如果上一层是squad或atlas，重新打开
             if (prev === 'squad') {
-                const squadPage = document.getElementById('squad');
-                if (squadPage) { squadPage.removeAttribute('hidden'); document.body.classList.add('squad-open'); }
-                const squadEntry = document.getElementById('squad-entry');
-                if (squadEntry) squadEntry.style.display = 'none';
-                window.scrollTo({ top: 0, behavior: 'instant' });
+                const sp = document.getElementById('squad');
+                if (sp) { sp.removeAttribute('hidden'); document.body.classList.add('squad-open'); }
+                const se = document.getElementById('squad-entry');
+                if (se) se.style.display = 'none';
             } else if (prev === 'atlas') {
-                const atlasPage = document.getElementById('atlas');
-                if (atlasPage) { atlasPage.removeAttribute('hidden'); document.body.classList.add('atlas-open'); }
-                const atlasEntry = document.getElementById('atlas-entry');
-                if (atlasEntry) atlasEntry.style.display = 'none';
-                window.scrollTo({ top: 0, behavior: 'instant' });
+                const ap = document.getElementById('atlas');
+                if (ap) { ap.removeAttribute('hidden'); document.body.classList.add('atlas-open'); }
+                const ae = document.getElementById('atlas-entry');
+                if (ae) ae.style.display = 'none';
             } else {
-                // 是 page-section
                 const page = document.getElementById(prev);
                 if (page) {
                     page.removeAttribute('hidden');
                     document.body.classList.add('page-open');
                 }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+            updateGlobalBackNav();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             // 没有历史，返回首页
             document.body.classList.remove('page-open', 'squad-open', 'atlas-open');
@@ -4278,6 +4285,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const el = document.getElementById(id);
                 if (el) el.style.display = '';
             });
+            updateGlobalBackNav();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
