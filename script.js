@@ -3644,8 +3644,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    let quickSquadOps = [];
+
     function openBoxRequestDetail(req) {
         currentBoxRequestId = req.id;
+        quickSquadOps = [];
         const content = document.getElementById('boxDetailContent');
         const repliesEl = document.getElementById('boxReplies');
         if (!content) return;
@@ -3659,10 +3662,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const avatarMap = buildAvatarMap();
         const ops = req.operators || [];
-        const opsHtml = ops.map(name => {
-            const url = avatarMap[name];
-            return `<span class="box-detail-op">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}</span>`;
-        }).join('');
 
         content.innerHTML = `
             <div class="box-detail-header">
@@ -3670,8 +3669,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="box-detail-meta">${escapeHtml(req.player_name || '匿名博士')} · ${req.created_at ? new Date(req.created_at).toLocaleDateString('zh-CN') : ''} · ${ops.length}名干员</div>
             </div>
             <div class="box-detail-desc">${escapeHtml(req.description || '')}</div>
-            <div class="box-detail-ops">${opsHtml}</div>
         `;
+
+        // 渲染发帖人完整Box
+        const ownerDetail = document.getElementById('boxOwnerDetail');
+        const ownerOps = document.getElementById('boxOwnerOps');
+        if (ownerDetail && ownerOps && ops.length > 0) {
+            ownerDetail.removeAttribute('hidden');
+            ownerOps.innerHTML = '';
+            ops.forEach(name => {
+                const url = avatarMap[name];
+                const el = document.createElement('div');
+                el.className = 'obox-owner-op';
+                el.dataset.name = name;
+                el.innerHTML = `${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}`;
+                el.addEventListener('click', () => toggleQuickSquadOp(name));
+                ownerOps.appendChild(el);
+            });
+        }
+
+        // 渲染快捷编队工具
+        renderQuickSquadGrid(ops);
+
+        // 预填回复者名称
+        const savedName = localStorage.getItem('arknights_player_name');
+        const replyAuthor = document.getElementById('boxReplyAuthor');
+        if (replyAuthor && savedName) replyAuthor.value = savedName;
 
         // 渲染回复
         const replies = req.replies || [];
@@ -3684,6 +3707,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.className = 'box-reply-card';
                 card.innerHTML = `
                     <div class="reply-meta">${escapeHtml(reply.author || '匿名博士')} · ${reply.time ? new Date(reply.time).toLocaleDateString('zh-CN') : ''}</div>
+                    ${reply.contact ? `<div style="color:var(--accent-cyan);font-size:0.8rem;margin-bottom:6px;">&#128222; ${escapeHtml(reply.contact)}</div>` : ''}
                     ${reply.code ? `<div class="reply-code">${escapeHtml(reply.code)}</div>` : ''}
                     <div class="reply-desc">${escapeHtml(reply.desc || '')}</div>
                 `;
@@ -3691,6 +3715,90 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+
+    function renderQuickSquadGrid(ops) {
+        const grid = document.getElementById('boxQuickGrid');
+        const section = document.getElementById('boxQuickSquad');
+        if (!grid || !section) return;
+        if (!ops || ops.length === 0) { section.setAttribute('hidden', ''); return; }
+        section.removeAttribute('hidden');
+        grid.innerHTML = '';
+        const avatarMap = buildAvatarMap();
+        ops.forEach(name => {
+            const el = document.createElement('div');
+            el.className = 'qs-grid-item' + (quickSquadOps.includes(name) ? ' selected' : '');
+            el.dataset.name = name;
+            const url = avatarMap[name];
+            el.innerHTML = `${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}`;
+            el.addEventListener('click', () => toggleQuickSquadOp(name));
+            grid.appendChild(el);
+        });
+        updateQuickSquadUI();
+    }
+
+    function toggleQuickSquadOp(name) {
+        if (quickSquadOps.includes(name)) {
+            quickSquadOps = quickSquadOps.filter(n => n !== name);
+        } else if (quickSquadOps.length < 12) {
+            quickSquadOps.push(name);
+        } else {
+            return; // 最多12人
+        }
+        // 同步高亮所有列表中的选中状态
+        document.querySelectorAll('.qs-grid-item, .obox-owner-op').forEach(el => {
+            el.classList.toggle('selected', quickSquadOps.includes(el.dataset.name));
+            el.classList.toggle('qs-selected', quickSquadOps.includes(el.dataset.name));
+        });
+        updateQuickSquadUI();
+    }
+
+    function updateQuickSquadUI() {
+        const selectedEl = document.getElementById('boxQuickSelected');
+        if (!selectedEl) return;
+        selectedEl.innerHTML = '';
+        if (quickSquadOps.length === 0) {
+            selectedEl.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem;">已选 0/12 人</span>';
+        } else {
+            const countSpan = document.createElement('span');
+            countSpan.style.cssText = 'color:var(--text-muted);font-size:0.85rem;margin-right:6px;';
+            countSpan.textContent = '已选 ' + quickSquadOps.length + '/12 人';
+            selectedEl.appendChild(countSpan);
+            quickSquadOps.forEach(name => {
+                const tag = document.createElement('span');
+                tag.className = 'qs-tag';
+                tag.innerHTML = `${escapeHtml(name)}<button type="button" data-qs-remove="${name}">&times;</button>`;
+                selectedEl.appendChild(tag);
+            });
+        }
+    }
+
+    // 快捷编队事件委托
+    document.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('[data-qs-remove]');
+        if (removeBtn) {
+            toggleQuickSquadOp(removeBtn.dataset.qsRemove);
+            return;
+        }
+    });
+
+    // 填入回复
+    document.getElementById('boxQuickToReply')?.addEventListener('click', function() {
+        if (quickSquadOps.length === 0) { alert('请先选择干员'); return; }
+        const code = quickSquadOps.map(name => name + ':1:1').join('|');
+        const codeInput = document.getElementById('boxReplyCode');
+        if (codeInput) codeInput.value = code;
+        // 滚动到回复区域
+        document.querySelector('.box-reply-section')?.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // 清空快捷编队
+    document.getElementById('boxQuickClear')?.addEventListener('click', function() {
+        quickSquadOps = [];
+        document.querySelectorAll('.qs-grid-item, .obox-owner-op').forEach(el => {
+            el.classList.remove('selected', 'qs-selected');
+        });
+        updateQuickSquadUI();
+    });
 
     // Box求助tab切换
     document.querySelectorAll('[data-box-tab]').forEach(tab => {
@@ -3711,6 +3819,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 提交回复
     document.getElementById('boxReplyBtn')?.addEventListener('click', async function() {
         if (!supabase || !currentBoxRequestId) return;
+        const author = document.getElementById('boxReplyAuthor')?.value?.trim() || '匿名博士';
+        const contact = document.getElementById('boxReplyContact')?.value?.trim() || '';
         const code = document.getElementById('boxReplyCode')?.value?.trim() || '';
         const desc = document.getElementById('boxReplyDesc')?.value?.trim() || '';
         if (!code && !desc) { alert('请填写建议内容'); return; }
@@ -3723,7 +3833,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 .single();
             const replies = req.replies || [];
             replies.push({
-                author: document.getElementById('publishAuthor')?.value?.trim() || '匿名博士',
+                author,
+                contact,
                 code,
                 desc,
                 time: new Date().toISOString()
@@ -3732,6 +3843,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('建议提交成功！');
             document.getElementById('boxReplyCode').value = '';
             document.getElementById('boxReplyDesc').value = '';
+            document.getElementById('boxReplyContact').value = '';
             // 刷新详情
             const { data: updated } = await supabase.from('box_requests').select('*').eq('id', currentBoxRequestId).single();
             if (updated) openBoxRequestDetail(updated);
@@ -3817,39 +3929,101 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== 全局返回导航 ==========
     const globalBackNav = document.getElementById('globalBackNav');
     const globalBackBtn = document.getElementById('globalBackBtn');
+    let pageHistory = [];
 
     function updateGlobalBackNav() {
-        // 检查是否在任何子页面中
         const isSubPage = document.body.classList.contains('page-open')
             || document.body.classList.contains('squad-open')
             || document.body.classList.contains('atlas-open');
         if (globalBackNav) {
             globalBackNav.classList.toggle('show', isSubPage);
         }
+        // 更新返回按钮文案
+        if (globalBackBtn) {
+            if (pageHistory.length > 0) {
+                const prev = pageHistory[pageHistory.length - 1];
+                // 提取中文名
+                const nameMap = { framework: '配队框架', operators: '干员推荐', teams: '实用阵容', community: '配队广场', mybox: '我的Box', boxhelp: 'Box求助', squad: '编队模拟', atlas: '全干员图鉴' };
+                const label = nameMap[prev] || '返回';
+                globalBackBtn.innerHTML = '&#8592; 返回' + (label !== '返回' ? label : '');
+            } else {
+                globalBackBtn.innerHTML = '&#8592; 返回首页';
+            }
+        }
     }
+
+    // 监听 openPage 调用来记录历史
+    const origOpenPage = openPage;
+    openPage = function(pageId) {
+        // 记录当前状态到历史
+        const currentPage = document.querySelector('.page-section:not([hidden])');
+        if (currentPage) {
+            pageHistory.push(currentPage.id);
+        } else if (document.body.classList.contains('squad-open')) {
+            pageHistory.push('squad');
+        } else if (document.body.classList.contains('atlas-open')) {
+            pageHistory.push('atlas');
+        }
+        if (pageHistory.length > 10) pageHistory = pageHistory.slice(-10);
+        origOpenPage(pageId);
+    };
 
     // 监听 body class 变化
     const bodyObserver = new MutationObserver(updateGlobalBackNav);
     bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
     globalBackBtn?.addEventListener('click', function() {
-        // 关闭所有子页面
-        document.body.classList.remove('page-open', 'squad-open', 'atlas-open');
-        document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
-        const squadPage = document.getElementById('squad');
-        const atlasPage = document.getElementById('atlas');
-        if (squadPage) squadPage.setAttribute('hidden', '');
-        if (atlasPage) atlasPage.setAttribute('hidden', '');
-        // 恢复入口卡片
-        const squadEntry = document.getElementById('squad-entry');
-        const atlasEntry = document.getElementById('atlas-entry');
-        const myboxEntry = document.getElementById('mybox-entry');
-        const boxhelpEntry = document.getElementById('boxhelp-entry');
-        const communityEntry = document.getElementById('community-entry');
-        [squadEntry, atlasEntry, myboxEntry, boxhelpEntry, communityEntry].forEach(el => {
-            if (el) el.style.display = '';
-        });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (pageHistory.length > 0) {
+            // 返回上一层
+            const prev = pageHistory.pop();
+            // 关闭当前
+            document.body.classList.remove('page-open', 'squad-open', 'atlas-open');
+            document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
+            const squadPage = document.getElementById('squad');
+            const atlasPage = document.getElementById('atlas');
+            if (squadPage) squadPage.setAttribute('hidden', '');
+            if (atlasPage) atlasPage.setAttribute('hidden', '');
+            // 恢复入口卡片
+            ['squad-entry', 'atlas-entry', 'mybox-entry', 'boxhelp-entry', 'community-entry'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = '';
+            });
+            // 如果上一层是squad或atlas，重新打开
+            if (prev === 'squad') {
+                const squadPage = document.getElementById('squad');
+                if (squadPage) { squadPage.removeAttribute('hidden'); document.body.classList.add('squad-open'); }
+                const squadEntry = document.getElementById('squad-entry');
+                if (squadEntry) squadEntry.style.display = 'none';
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            } else if (prev === 'atlas') {
+                const atlasPage = document.getElementById('atlas');
+                if (atlasPage) { atlasPage.removeAttribute('hidden'); document.body.classList.add('atlas-open'); }
+                const atlasEntry = document.getElementById('atlas-entry');
+                if (atlasEntry) atlasEntry.style.display = 'none';
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            } else {
+                // 是 page-section
+                const page = document.getElementById(prev);
+                if (page) {
+                    page.removeAttribute('hidden');
+                    document.body.classList.add('page-open');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } else {
+            // 没有历史，返回首页
+            document.body.classList.remove('page-open', 'squad-open', 'atlas-open');
+            document.querySelectorAll('.page-section').forEach(s => s.setAttribute('hidden', ''));
+            const squadPage = document.getElementById('squad');
+            const atlasPage = document.getElementById('atlas');
+            if (squadPage) squadPage.setAttribute('hidden', '');
+            if (atlasPage) atlasPage.setAttribute('hidden', '');
+            ['squad-entry', 'atlas-entry', 'mybox-entry', 'boxhelp-entry', 'community-entry'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = '';
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     });
 
     // 恢复博士名称

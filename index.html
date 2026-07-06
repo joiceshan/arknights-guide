@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=70">
+    <link rel="stylesheet" href="style.css?v=80">
 </head>
 <body>
     <!-- 全局返回导航 -->
@@ -4413,8 +4413,37 @@
             <!-- 求助详情 -->
             <div class="comm-content" id="box-detail">
                 <div id="boxDetailContent"></div>
+
+                <!-- 发帖人Box详情 -->
+                <div class="box-owner-detail" id="boxOwnerDetail" hidden>
+                    <h3 style="color:var(--accent-gold);margin-bottom:10px;font-size:1rem;">&#128230; 发帖人的完整Box</h3>
+                    <div class="box-owner-ops" id="boxOwnerOps"></div>
+                </div>
+
+                <!-- 快捷编队工具 -->
+                <div class="box-quick-squad" id="boxQuickSquad" hidden>
+                    <h3 style="color:var(--accent-gold);margin-bottom:10px;font-size:1rem;">&#9889; 快捷编队</h3>
+                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:10px;">从发帖人的Box中点选干员，快速组建编队</p>
+                    <div class="box-quick-selected" id="boxQuickSelected">
+                        <span style="color:var(--text-muted);font-size:0.85rem;">已选 0/12 人</span>
+                    </div>
+                    <div class="box-quick-grid" id="boxQuickGrid"></div>
+                    <div style="display:flex;gap:10px;margin-top:12px;">
+                        <button type="button" class="publish-btn" id="boxQuickToReply" style="padding:8px 20px;">填入回复</button>
+                        <button type="button" class="atlas-back-btn" id="boxQuickClear">清空</button>
+                    </div>
+                </div>
+
                 <div class="box-reply-section">
                     <h3>回复建议编队</h3>
+                    <div class="form-group">
+                        <label>你的名称</label>
+                        <input type="text" id="boxReplyAuthor" placeholder="你的博士名称" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>联系方式（可选）</label>
+                        <input type="text" id="boxReplyContact" placeholder="如：UID12345 / QQ12345 / 微信xx" maxlength="100">
+                    </div>
                     <div class="form-group">
                         <label>建议编队代码</label>
                         <input type="text" id="boxReplyCode" placeholder="粘贴编队代码，如：桃金娘:1:3|风笛:2:3|..." maxlength="300">
@@ -4587,7 +4616,7 @@
     <script src="operator_modules.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="operator_skills.js?v=14"></script>
-    <script src="script.js?v=70"></script>
+    <script src="script.js?v=80"></script>
 </body>
 </html>
 
