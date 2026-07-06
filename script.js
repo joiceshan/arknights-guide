@@ -3520,16 +3520,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateMyBoxSummary() {
-        const summary = document.getElementById('myboxSummary');
         const opsEl = document.getElementById('myboxSummaryOps');
         const countEl = document.getElementById('myboxSummaryCount');
-        if (!summary || !opsEl) return;
+        const emptyEl = document.getElementById('myboxSummaryEmpty');
+        if (!opsEl) return;
+        if (countEl) countEl.textContent = myBoxOperators.length;
         if (myBoxOperators.length === 0) {
-            summary.setAttribute('hidden', '');
+            opsEl.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">勾选干员后这里会显示你的完整Box</p>';
             return;
         }
-        summary.removeAttribute('hidden');
-        if (countEl) countEl.textContent = myBoxOperators.length;
         opsEl.innerHTML = '';
         const avatarMap = buildAvatarMap();
         myBoxOperators.forEach(name => {

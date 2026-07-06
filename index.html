@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=90">
+    <link rel="stylesheet" href="style.css?v=91">
 </head>
 <body>
     <!-- 全局返回导航 -->
@@ -4381,9 +4381,11 @@
             </div>
 
             <!-- 我的Box汇总 -->
-            <div class="mybox-summary" id="myboxSummary" hidden>
+            <div class="mybox-summary" id="myboxSummary">
                 <h3 style="color:var(--accent-gold);margin-bottom:10px;font-size:1rem;">&#128230; 我的Box汇总 (<span id="myboxSummaryCount">0</span>名干员)</h3>
-                <div class="mybox-summary-ops" id="myboxSummaryOps"></div>
+                <div class="mybox-summary-ops" id="myboxSummaryOps">
+                    <p style="color:var(--text-muted);font-size:0.85rem;" id="myboxSummaryEmpty">勾选干员后这里会显示你的完整Box</p>
+                </div>
             </div>
 
             <div class="box-operator-grid" id="boxOperatorGrid"></div>
@@ -4623,7 +4625,7 @@
     <script src="operator_modules.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="operator_skills.js?v=14"></script>
-    <script src="script.js?v=90"></script>
+    <script src="script.js?v=91"></script>
 </body>
 </html>
 
