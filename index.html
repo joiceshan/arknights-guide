@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=91">
+    <link rel="stylesheet" href="style.css?v=92">
 </head>
 <body>
     <!-- 全局返回导航 -->
@@ -4353,6 +4353,7 @@
                 <div style="display:flex;gap:10px;align-items:center;">
                     <input type="text" id="playerNameInput" placeholder="你的博士名称" maxlength="20" style="padding:6px 12px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:0.85rem;width:140px;">
                     <button class="atlas-back-btn" type="button" id="saveMyBoxBtn">保存Box</button>
+                    <button class="atlas-back-btn" type="button" id="aiSquadBtn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:#8b5cf6;color:#fff;">&#129302; AI配队</button>
                     <button class="atlas-back-btn" type="button" id="publishBoxHelpBtn">发布求助</button>
                     <button class="atlas-back-btn" type="button" data-close-page="mybox">返回首页</button>
                 </div>
@@ -4389,6 +4390,22 @@
             </div>
 
             <div class="box-operator-grid" id="boxOperatorGrid"></div>
+
+            <!-- AI配队结果 -->
+            <div class="ai-squad-result" id="aiSquadResult" hidden>
+                <h3 style="color:#8b5cf6;margin-bottom:12px;font-size:1.1rem;">&#129302; AI推荐配队</h3>
+                <div id="aiSquadScene" style="margin-bottom:12px;">
+                    <label style="color:var(--text-muted);font-size:0.85rem;margin-right:8px;">推荐场景：</label>
+                    <select id="aiSquadSceneSelect" style="padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:0.85rem;">
+                        <option value="general">通用推荐</option>
+                        <option value="mop">剿灭挂机</option>
+                        <option value="hard">高难挑战</option>
+                        <option value="is">肉鸽</option>
+                    </select>
+                    <button type="button" id="aiSquadRefresh" style="margin-left:8px;padding:6px 14px;border:1px solid #8b5cf6;border-radius:6px;background:rgba(139,92,246,0.15);color:#8b5cf6;cursor:pointer;font-family:inherit;font-size:0.85rem;">重新推荐</button>
+                </div>
+                <div id="aiSquadCards"></div>
+            </div>
 
             <!-- 其他博士的Box -->
             <div class="other-boxes-section" id="otherBoxesSection" hidden>
@@ -4625,7 +4642,7 @@
     <script src="operator_modules.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="operator_skills.js?v=14"></script>
-    <script src="script.js?v=91"></script>
+    <script src="script.js?v=92"></script>
 </body>
 </html>
 

@@ -3540,6 +3540,214 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ========== AI配队算法 ==========
+    function getBoxOperatorData() {
+        const cards = document.querySelectorAll('.atlas-operator-card');
+        const result = [];
+        cards.forEach(card => {
+            if (myBoxOperators.includes(card.dataset.atlasName)) {
+                result.push({
+                    name: card.dataset.atlasName,
+                    cls: card.dataset.atlasClass,
+                    branch: card.dataset.atlasBranch,
+                    rarity: card.dataset.atlasRarity,
+                    tags: (card.dataset.atlasTags || '').split(/[、,，]/).map(t => t.trim()).filter(Boolean),
+                    avatar: card.dataset.atlasAvatar || '',
+                    position: card.dataset.atlasPosition || ''
+                });
+            }
+        });
+        return result;
+    }
+
+    function aiAnalyzeAndRecommend(scene) {
+        const boxData = getBoxOperatorData();
+        if (boxData.length < 6) return { error: '干员数量不足，至少需要6名干员' };
+
+        const results = [];
+        const r = rarityNum.bind(null);
+
+        // 按星级降序排序
+        boxData.sort((a, b) => r(b.rarity) - r(a.rarity));
+
+        // 分析Box特点
+        const classCount = {};
+        const tagCount = {};
+        boxData.forEach(op => {
+            classCount[op.cls] = (classCount[op.cls] || 0) + 1;
+            op.tags.forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; });
+        });
+        const star6 = boxData.filter(op => r(op.rarity) >= 6);
+        const star5 = boxData.filter(op => r(op.rarity) === 5);
+
+        // 通用推荐场景
+        if (scene === 'general' || scene === 'all') {
+            results.push(buildTeam(boxData, classCount, tagCount, '通用均衡队', '先锋+近卫+重装+狙击+术师+医疗的均衡12人队，适合大部分关卡。优先选用高星干员和输出型干员。',
+                { vanguard: 2, guard: 3, defender: 2, sniper: 2, caster: 1, medic: 2 }, boxData));
+            if (star6.length >= 8) {
+                results.push(buildTeam(boxData, classCount, tagCount, '精锐突击队', '以6星为核心的高练度突击编队，适合难度较高的主线关卡。',
+                    { vanguard: 2, guard: 4, defender: 1, sniper: 2, caster: 1, medic: 2 }, boxData));
+            }
+        }
+
+        // 剿灭挂机
+        if (scene === 'mop' || scene === 'all') {
+            results.push(buildTeam(boxData, classCount, tagCount, '剿灭挂机队', '以AOE输出为核心，配以费用回复和持续治疗，适合剿灭作战。',
+                { vanguard: 2, guard: 3, defender: 2, sniper: 2, caster: 1, medic: 2, preferTags: ['群攻', '爆发输出', '费用回复', '治疗', '支援'] }, boxData));
+        }
+
+        // 高难挑战
+        if (scene === 'hard' || scene === 'all') {
+            results.push(buildTeam(boxData, classCount, tagCount, '高难攻坚队', '注重生存和持续输出，配备减速和控场干员，适合高难关卡。',
+                { vanguard: 2, guard: 3, defender: 2, sniper: 2, caster: 1, medic: 2, preferTags: ['快速复活', '控场', '减速', '生存', '爆发输出', '支援'] }, boxData));
+        }
+
+        // 肉鸽
+        if (scene === 'is' || scene === 'all') {
+            results.push(buildTeam(boxData, classCount, tagCount, '肉鸽探索队', '注重干员灵活性，多核心输出+治疗，适合集成战略模式。',
+                { vanguard: 2, guard: 3, defender: 1, sniper: 2, caster: 2, medic: 2, preferTags: ['快速复活', '生存', '控场', '输出', '召唤'] }, boxData));
+        }
+
+        return { teams: results, boxAnalysis: { star6: star6.length, star5: star5.length, total: boxData.length, classCount, topTags: Object.entries(tagCount).sort((a,b) => b[1]-a[1]).slice(0, 8) } };
+    }
+
+    function buildTeam(boxData, classCount, tagCount, name, desc, config, allOps) {
+        const preferTags = config.preferTags || [];
+        const selected = [];
+        const selectedNames = new Set();
+        const classMap = { vanguard: '先锋', guard: '近卫', defender: '重装', sniper: '狙击', caster: '术师', medic: '医疗', specialist: '特种', supporter: '辅助' };
+
+        function pickOp(cls, count, tagPriority) {
+            let pool = boxData.filter(op => op.cls === cls && !selectedNames.has(op.name));
+            if (tagPriority && tagPriority.length > 0) {
+                pool.sort((a, b) => {
+                    const aScore = (tagPriority.filter(t => a.tags.includes(t)).length) * 10 + rarityNum(a.rarity);
+                    const bScore = (tagPriority.filter(t => b.tags.includes(t)).length) * 10 + rarityNum(b.rarity);
+                    return bScore - aScore;
+                });
+            } else {
+                pool.sort((a, b) => rarityNum(b.rarity) - rarityNum(a.rarity));
+            }
+            const picked = pool.slice(0, count);
+            picked.forEach(op => { selected.push(op); selectedNames.add(op.name); });
+        }
+
+        // 先选费用回复先锋
+        if (config.vanguard) {
+            let vPool = boxData.filter(op => op.cls === '先锋' && !selectedNames.has(op.name));
+            vPool.sort((a, b) => {
+                const aHasFR = a.tags.includes('费用回复') ? 100 : 0;
+                const bHasFR = b.tags.includes('费用回复') ? 100 : 0;
+                return (bHasFR + rarityNum(b.rarity)) - (aHasFR + rarityNum(a.rarity));
+            });
+            selected.push(...vPool.slice(0, config.vanguard));
+            vPool.slice(0, config.vanguard).forEach(op => selectedNames.add(op.name));
+        }
+        // 医疗：优先有治疗标签的
+        if (config.medic) {
+            let mPool = boxData.filter(op => op.cls === '医疗' && !selectedNames.has(op.name));
+            mPool.sort((a, b) => {
+                const aH = a.tags.includes('治疗') ? 100 : 0;
+                const bH = b.tags.includes('治疗') ? 100 : 0;
+                return (bH + rarityNum(b.rarity)) - (aH + rarityNum(a.rarity));
+            });
+            selected.push(...mPool.slice(0, config.medic));
+            mPool.slice(0, config.medic).forEach(op => selectedNames.add(op.name));
+        }
+        // 其他职业
+        ['guard', 'defender', 'sniper', 'caster'].forEach(role => {
+            if (config[role]) pickOp(classMap[role], config[role], preferTags);
+        });
+        // 如果不够12人，从剩余干员中按星级补齐
+        if (selected.length < 12) {
+            const remaining = boxData.filter(op => !selectedNames.has(op.name)).sort((a, b) => rarityNum(b.rarity) - rarityNum(a.rarity));
+            for (const op of remaining) {
+                if (selected.length >= 12) break;
+                selected.push(op);
+                selectedNames.add(op.name);
+            }
+        }
+
+        // 生成编队代码
+        const code = selected.map(op => op.name + ':1:1').join('|');
+
+        return { name, desc, operators: selected.slice(0, 12), code };
+    }
+
+    function renderAiResults(result) {
+        const container = document.getElementById('aiSquadCards');
+        const section = document.getElementById('aiSquadResult');
+        if (!container || !section) return;
+        section.removeAttribute('hidden');
+
+        // 渲染Box分析
+        let html = '<div class="ai-scan-info">';
+        if (result.error) {
+            html += result.error;
+            html += '</div>';
+            container.innerHTML = html;
+            return;
+        }
+        const a = result.boxAnalysis;
+        html += '&#128202; <strong>你的Box分析：</strong>共' + a.total + '名干员，其中6星' + a.star6 + '人、5星' + a.star5 + '人。';
+        html += ' 擅长方向：' + a.topTags.map(t => t[0] + '(' + t[1] + ')').join('、') + '。';
+        html += '</div>';
+
+        // 渲染推荐队伍
+        result.teams.forEach(team => {
+            html += '<div class="ai-team-card">';
+            html += '<h4>&#127942; ' + escapeHtml(team.name) + ' (' + team.operators.length + '人)</h4>';
+            html += '<div class="ai-team-desc">' + escapeHtml(team.desc) + '</div>';
+            html += '<div class="ai-team-ops">';
+            team.operators.forEach(op => {
+                html += '<span class="ai-team-op">' +
+                    (op.avatar ? '<img src="' + op.avatar + '" alt="' + escapeHtml(op.name) + '" onerror="this.style.display=\'none\'">' : '') +
+                    escapeHtml(op.name) + ' <small style="color:var(--text-muted)">' + escapeHtml(op.branch) + '</small></span>';
+            });
+            html += '</div>';
+            html += '<div class="ai-team-code" title="点击复制编队代码" data-copy-code="' + escapeHtml(team.code) + '">&#128203; ' + escapeHtml(team.code) + '</div>';
+            html += '</div>';
+        });
+
+        container.innerHTML = html;
+
+        // 编队代码点击复制
+        container.querySelectorAll('[data-copy-code]').forEach(el => {
+            el.addEventListener('click', function() {
+                const code = this.dataset.copyCode;
+                navigator.clipboard?.writeText(code).then(() => {
+                    this.textContent = '已复制!';
+                    setTimeout(() => { this.innerHTML = '&#128203; ' + escapeHtml(code); }, 1500);
+                });
+            });
+        });
+    }
+
+    // AI配队按钮事件
+    document.getElementById('aiSquadBtn')?.addEventListener('click', function() {
+        if (myBoxOperators.length < 6) { alert('请先至少选择6名干员'); return; }
+        const scene = document.getElementById('aiSquadSceneSelect')?.value || 'general';
+        const result = aiAnalyzeAndRecommend(scene === 'general' ? 'all' : scene);
+        renderAiResults(result);
+        document.getElementById('aiSquadResult')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // 场景切换
+    document.getElementById('aiSquadSceneSelect')?.addEventListener('change', function() {
+        if (myBoxOperators.length < 6) return;
+        const scene = this.value;
+        const result = aiAnalyzeAndRecommend(scene === 'general' ? 'all' : scene);
+        renderAiResults(result);
+    });
+
+    // 重新推荐
+    document.getElementById('aiSquadRefresh')?.addEventListener('click', function() {
+        if (myBoxOperators.length < 6) { alert('请先至少选择6名干员'); return; }
+        const scene = document.getElementById('aiSquadSceneSelect')?.value || 'general';
+        const result = aiAnalyzeAndRecommend(scene === 'general' ? 'all' : scene);
+        renderAiResults(result);
+    });
+
     // Box筛选
     document.querySelectorAll('[data-box-filter]').forEach(btn => {
         btn.addEventListener('click', function() {

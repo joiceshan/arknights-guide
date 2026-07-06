@@ -3988,6 +3988,83 @@ body.page-open #atlas-entry {
     border-radius: 4px;
 }
 
+/* ========== AI配队结果 ========== */
+.ai-squad-result {
+    margin-top: 20px;
+    padding: 18px;
+    background: var(--bg-card);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 12px;
+}
+.ai-team-card {
+    padding: 14px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.ai-team-card:hover {
+    border-color: rgba(139, 92, 246, 0.5);
+}
+.ai-team-card h4 {
+    color: #a78bfa;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+.ai-team-card .ai-team-desc {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+.ai-team-ops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.ai-team-ops .ai-team-op {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+.ai-team-ops .ai-team-op img {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+}
+.ai-team-code {
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--accent-cyan);
+    word-break: break-all;
+    cursor: pointer;
+}
+.ai-team-code:hover {
+    background: rgba(0, 200, 255, 0.05);
+}
+.ai-scan-info {
+    padding: 12px;
+    background: rgba(139, 92, 246, 0.06);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
 /* ========== 其他博士的Box ========== */
 .other-boxes-section {
     margin-top: 30px;
