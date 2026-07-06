@@ -3849,7 +3849,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (empty) empty.style.display = 'none';
         const avatarMap = buildAvatarMap();
-        requests.forEach(req => {
+        requests.forEach((req, idx) => {
             const card = document.createElement('div');
             card.className = 'box-request-card';
             const ops = req.operators || [];
@@ -3859,6 +3859,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return url ? `<img src="${url}" alt="${escapeHtml(name)}" title="${escapeHtml(name)}" onerror="this.style.display='none'">` : '';
             }).join('');
             const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('zh-CN') : '';
+            const isOwn = req.visitor_id && req.visitor_id === getVisitorId();
+            const canDelete = isAdmin() || isOwn;
             card.innerHTML = `
                 <h4>${escapeHtml(req.title)}</h4>
                 <div class="req-meta">${escapeHtml(req.player_name || '匿名博士')} · ${dateStr} · ${ops.length}名干员</div>
@@ -3868,11 +3870,33 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span>&#128172; ${(req.replies || []).length} 条建议</span>
                     <span>&#128077; ${req.likes || 0} 点赞</span>
                     ${req.scene ? `<span>&#127942; ${escapeHtml(req.scene)}</span>` : ''}
+                    ${canDelete ? `<button class="comm-delete-btn" data-box-req-idx="${idx}" title="删除此求助帖">&#128465;</button>` : ''}
                 </div>
             `;
+            // 删除按钮事件
+            const delBtn = card.querySelector('[data-box-req-idx]');
+            if (delBtn) {
+                delBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (!confirm('确定删除此求助帖？')) return;
+                    deleteBoxRequest(req.id, idx);
+                });
+            }
             card.addEventListener('click', () => openBoxRequestDetail(req));
             list.appendChild(card);
         });
+    }
+
+    async function deleteBoxRequest(id, idx) {
+        if (!supabase) return;
+        try {
+            const { error } = await supabase.from('box_requests').delete().eq('id', id);
+            if (error) throw error;
+            loadBoxRequests();
+        } catch (e) {
+            console.error('删除失败:', e);
+            alert('删除失败');
+        }
     }
 
     let quickSquadOps = [];
