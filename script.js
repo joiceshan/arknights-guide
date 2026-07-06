@@ -3382,5 +3382,343 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // refreshCommunity already handles list and my tabs
 
+    // ========== 我的Box & Box求助 ==========
+    let myBoxOperators = [];
+    let currentBoxFilter = 'all';
+    let currentBoxRequestId = null;
+
+    function getVisitorId() {
+        let id = localStorage.getItem('arknights_visitor_id');
+        if (!id) {
+            id = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('arknights_visitor_id', id);
+        }
+        return id;
+    }
+
+    async function loadMyBox() {
+        if (!supabase) return [];
+        try {
+            const { data, error } = await supabase
+                .from('player_boxes')
+                .select('operators')
+                .eq('visitor_id', getVisitorId())
+                .maybeSingle();
+            if (error) throw error;
+            myBoxOperators = (data && data.operators) || [];
+        } catch (e) {
+            console.error('[Box] 加载失败:', e);
+            myBoxOperators = [];
+        }
+    }
+
+    async function saveMyBox(operators) {
+        if (!supabase) return false;
+        try {
+            const { data: existing } = await supabase
+                .from('player_boxes')
+                .select('id')
+                .eq('visitor_id', getVisitorId())
+                .maybeSingle();
+            if (existing) {
+                await supabase.from('player_boxes').update({ operators, updated_at: new Date().toISOString() }).eq('id', existing.id);
+            } else {
+                await supabase.from('player_boxes').insert({
+                    player_name: document.getElementById('publishAuthor')?.value?.trim() || '匿名博士',
+                    visitor_id: getVisitorId(),
+                    operators
+                });
+            }
+            myBoxOperators = operators;
+            return true;
+        } catch (e) {
+            console.error('[Box] 保存失败:', e);
+            return false;
+        }
+    }
+
+    function renderBoxOperators() {
+        const grid = document.getElementById('boxOperatorGrid');
+        if (!grid) return;
+        const search = (document.getElementById('boxSearch')?.value || '').trim();
+        grid.innerHTML = '';
+
+        const allOps = window.operators || [];
+        const filtered = allOps.filter(op => {
+            if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
+            if (search && !op.name.includes(search)) return false;
+            return true;
+        });
+
+        const avatarMap = buildAvatarMap();
+        filtered.forEach(op => {
+            const el = document.createElement('div');
+            el.className = 'box-op-item' + (myBoxOperators.includes(op.name) ? ' selected' : '');
+            el.dataset.name = op.name;
+            const avatarUrl = avatarMap[op.name];
+            el.innerHTML = `
+                <img src="${avatarUrl || ''}" alt="${escapeHtml(op.name)}" onerror="this.style.display='none'" loading="lazy">
+                <span class="box-op-name">${escapeHtml(op.name)}</span>
+                <span class="box-op-class">${escapeHtml(op.class)}</span>
+            `;
+            el.addEventListener('click', function() {
+                if (myBoxOperators.includes(op.name)) {
+                    myBoxOperators = myBoxOperators.filter(n => n !== op.name);
+                    el.classList.remove('selected');
+                } else {
+                    myBoxOperators.push(op.name);
+                    el.classList.add('selected');
+                }
+                updateBoxCount();
+            });
+            grid.appendChild(el);
+        });
+        updateBoxCount();
+    }
+
+    function updateBoxCount() {
+        const allOps = window.operators || [];
+        const el = document.getElementById('boxCount');
+        if (el) el.textContent = '已选 ' + myBoxOperators.length + ' / ' + allOps.length;
+    }
+
+    // Box筛选
+    document.querySelectorAll('[data-box-filter]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('[data-box-filter]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentBoxFilter = this.dataset.boxFilter;
+            renderBoxOperators();
+        });
+    });
+
+    // Box搜索
+    document.getElementById('boxSearch')?.addEventListener('input', function() {
+        renderBoxOperators();
+    });
+
+    // 全选/清空
+    document.getElementById('boxSelectAll')?.addEventListener('click', function() {
+        const allOps = window.operators || [];
+        const search = (document.getElementById('boxSearch')?.value || '').trim();
+        const filtered = allOps.filter(op => {
+            if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
+            if (search && !op.name.includes(search)) return false;
+            return true;
+        });
+        filtered.forEach(op => {
+            if (!myBoxOperators.includes(op.name)) myBoxOperators.push(op.name);
+        });
+        renderBoxOperators();
+    });
+
+    document.getElementById('boxClearAll')?.addEventListener('click', function() {
+        const allOps = window.operators || [];
+        const search = (document.getElementById('boxSearch')?.value || '').trim();
+        const filtered = allOps.filter(op => {
+            if (currentBoxFilter !== 'all' && op.class !== currentBoxFilter) return false;
+            if (search && !op.name.includes(search)) return false;
+            return true;
+        });
+        const filteredNames = filtered.map(op => op.name);
+        myBoxOperators = myBoxOperators.filter(n => !filteredNames.includes(n));
+        renderBoxOperators();
+    });
+
+    // 保存Box
+    document.getElementById('saveMyBoxBtn')?.addEventListener('click', async function() {
+        const ok = await saveMyBox(myBoxOperators);
+        alert(ok ? 'Box已保存到云端！' : '保存失败，请重试');
+    });
+
+    // 发布求助
+    document.getElementById('publishBoxHelpBtn')?.addEventListener('click', async function() {
+        if (!supabase) { alert('云端连接失败'); return; }
+        if (myBoxOperators.length === 0) { alert('请先选择你拥有的干员'); return; }
+        const title = prompt('求助标题（如：帮我配一个剿灭挂机队）');
+        if (!title) return;
+        const desc = prompt('补充描述（可选，如：缺少玛恩纳和维什戴尔）') || '';
+        const scene = prompt('适用场景（如：剿灭挂机/高难挑战/肉鸽）') || '';
+        try {
+            await supabase.from('box_requests').insert({
+                player_name: document.getElementById('publishAuthor')?.value?.trim() || '匿名博士',
+                visitor_id: getVisitorId(),
+                title,
+                description: desc,
+                scene,
+                operators: myBoxOperators
+            });
+            alert('求助发布成功！');
+            // 刷新求助列表
+            loadBoxRequests();
+        } catch (e) {
+            console.error(e);
+            alert('发布失败');
+        }
+    });
+
+    // 加载并渲染求助列表
+    async function loadBoxRequests() {
+        if (!supabase) return;
+        try {
+            const { data, error } = await supabase
+                .from('box_requests')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            renderBoxRequestList(data || []);
+        } catch (e) {
+            console.error('[BoxHelp] 加载失败:', e);
+        }
+    }
+
+    function renderBoxRequestList(requests) {
+        const list = document.getElementById('boxHelpList');
+        const empty = document.getElementById('boxHelpEmpty');
+        if (!list) return;
+        list.innerHTML = '';
+        if (!requests.length) {
+            if (empty) empty.style.display = 'block';
+            return;
+        }
+        if (empty) empty.style.display = 'none';
+        const avatarMap = buildAvatarMap();
+        requests.forEach(req => {
+            const card = document.createElement('div');
+            card.className = 'box-request-card';
+            const ops = req.operators || [];
+            const previewOps = ops.slice(0, 12);
+            const previewHtml = previewOps.map(name => {
+                const url = avatarMap[name];
+                return url ? `<img src="${url}" alt="${escapeHtml(name)}" title="${escapeHtml(name)}" onerror="this.style.display='none'">` : '';
+            }).join('');
+            const dateStr = req.created_at ? new Date(req.created_at).toLocaleDateString('zh-CN') : '';
+            card.innerHTML = `
+                <h4>${escapeHtml(req.title)}</h4>
+                <div class="req-meta">${escapeHtml(req.player_name || '匿名博士')} · ${dateStr} · ${ops.length}名干员</div>
+                <div class="req-desc">${escapeHtml(req.description || '')}</div>
+                <div class="req-ops-preview">${previewHtml}</div>
+                <div class="req-stats">
+                    <span>&#128172; ${(req.replies || []).length} 条建议</span>
+                    <span>&#128077; ${req.likes || 0} 点赞</span>
+                    ${req.scene ? `<span>&#127942; ${escapeHtml(req.scene)}</span>` : ''}
+                </div>
+            `;
+            card.addEventListener('click', () => openBoxRequestDetail(req));
+            list.appendChild(card);
+        });
+    }
+
+    function openBoxRequestDetail(req) {
+        currentBoxRequestId = req.id;
+        const content = document.getElementById('boxDetailContent');
+        const repliesEl = document.getElementById('boxReplies');
+        if (!content) return;
+
+        // 切换tab
+        document.querySelectorAll('[data-box-tab]').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#box-list, #box-detail').forEach(c => c.classList.remove('active'));
+        document.querySelector('[data-box-tab="detail"]')?.classList.add('active');
+        document.getElementById('box-detail')?.classList.add('active');
+        document.getElementById('boxDetailTab')?.removeAttribute('hidden');
+
+        const avatarMap = buildAvatarMap();
+        const ops = req.operators || [];
+        const opsHtml = ops.map(name => {
+            const url = avatarMap[name];
+            return `<span class="box-detail-op">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}</span>`;
+        }).join('');
+
+        content.innerHTML = `
+            <div class="box-detail-header">
+                <h3>${escapeHtml(req.title)}</h3>
+                <div class="box-detail-meta">${escapeHtml(req.player_name || '匿名博士')} · ${req.created_at ? new Date(req.created_at).toLocaleDateString('zh-CN') : ''} · ${ops.length}名干员</div>
+            </div>
+            <div class="box-detail-desc">${escapeHtml(req.description || '')}</div>
+            <div class="box-detail-ops">${opsHtml}</div>
+        `;
+
+        // 渲染回复
+        const replies = req.replies || [];
+        repliesEl.innerHTML = '';
+        if (replies.length === 0) {
+            repliesEl.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">暂无建议，来做第一个回复的博士吧！</p>';
+        } else {
+            replies.forEach((reply, idx) => {
+                const card = document.createElement('div');
+                card.className = 'box-reply-card';
+                card.innerHTML = `
+                    <div class="reply-meta">${escapeHtml(reply.author || '匿名博士')} · ${reply.time ? new Date(reply.time).toLocaleDateString('zh-CN') : ''}</div>
+                    ${reply.code ? `<div class="reply-code">${escapeHtml(reply.code)}</div>` : ''}
+                    <div class="reply-desc">${escapeHtml(reply.desc || '')}</div>
+                `;
+                repliesEl.appendChild(card);
+            });
+        }
+    }
+
+    // Box求助tab切换
+    document.querySelectorAll('[data-box-tab]').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.boxTab;
+            if (!tabName) return;
+            document.querySelectorAll('[data-box-tab]').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#box-list, #box-detail').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('box-' + tabName)?.classList.add('active');
+            if (tabName === 'list') {
+                document.getElementById('boxDetailTab')?.setAttribute('hidden', '');
+                loadBoxRequests();
+            }
+        });
+    });
+
+    // 提交回复
+    document.getElementById('boxReplyBtn')?.addEventListener('click', async function() {
+        if (!supabase || !currentBoxRequestId) return;
+        const code = document.getElementById('boxReplyCode')?.value?.trim() || '';
+        const desc = document.getElementById('boxReplyDesc')?.value?.trim() || '';
+        if (!code && !desc) { alert('请填写建议内容'); return; }
+
+        try {
+            const { data: req } = await supabase
+                .from('box_requests')
+                .select('replies')
+                .eq('id', currentBoxRequestId)
+                .single();
+            const replies = req.replies || [];
+            replies.push({
+                author: document.getElementById('publishAuthor')?.value?.trim() || '匿名博士',
+                code,
+                desc,
+                time: new Date().toISOString()
+            });
+            await supabase.from('box_requests').update({ replies }).eq('id', currentBoxRequestId);
+            alert('建议提交成功！');
+            document.getElementById('boxReplyCode').value = '';
+            document.getElementById('boxReplyDesc').value = '';
+            // 刷新详情
+            const { data: updated } = await supabase.from('box_requests').select('*').eq('id', currentBoxRequestId).single();
+            if (updated) openBoxRequestDetail(updated);
+            loadBoxRequests();
+        } catch (e) {
+            console.error(e);
+            alert('提交失败');
+        }
+    });
+
+    // 页面打开时加载数据
+    document.querySelectorAll('[data-open-page="mybox"]').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            await loadMyBox();
+            renderBoxOperators();
+        });
+    });
+    document.querySelectorAll('[data-open-page="boxhelp"]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            loadBoxRequests();
+        });
+    });
+
     updateAdminUI();
 });
