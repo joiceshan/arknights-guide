@@ -4220,7 +4220,7 @@ body.page-open #atlas-entry {
     border-radius: 10px;
     border: 1px solid var(--border-color);
     margin-bottom: 12px;
-    cursor: pointer;
+    cursor: default;
     transition: all 0.2s;
 }
 .other-box-card:hover {
@@ -4277,6 +4277,81 @@ body.page-open #atlas-entry {
     width: 32px;
     height: 32px;
     border-radius: 4px;
+}
+.obox-main {
+    cursor: pointer;
+}
+.obox-message {
+    color: var(--accent-cyan);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background: rgba(0, 200, 255, 0.06);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-cyan);
+}
+.obox-comments-section {
+    margin-top: 10px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 10px;
+}
+.obox-comments-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    user-select: none;
+}
+.obox-comments-toggle:hover {
+    color: var(--text-primary);
+}
+.obox-comments-body {
+    margin-top: 8px;
+    transition: all 0.2s;
+}
+.obox-comments-body.collapsed-body {
+    display: none;
+}
+.obox-comments-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+.obox-comment {
+    padding: 6px 10px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.obox-comment strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.obox-comment-form input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.82rem;
+    box-sizing: border-box;
+}
+.obox-comment-form .obox-comment-author {
+    width: 100%;
+}
+.obox-comment-form .obox-comment-input {
+    flex: 1;
 }
 
 /* ========== 通用返回导航 ========== */

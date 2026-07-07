@@ -3419,6 +3419,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function saveMyBox(operators) {
         if (!supabase) return false;
         const playerName = document.getElementById('playerNameInput')?.value?.trim() || '匿名博士';
+        const message = document.getElementById('boxSaveMessage')?.value?.trim() || '';
         // 保存名称到 localStorage 备用
         localStorage.setItem('arknights_player_name', playerName);
         try {
@@ -3428,12 +3429,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 .eq('visitor_id', getVisitorId())
                 .maybeSingle();
             if (existing) {
-                await supabase.from('player_boxes').update({ operators, player_name: playerName, updated_at: new Date().toISOString() }).eq('id', existing.id);
+                await supabase.from('player_boxes').update({ operators, player_name: playerName, message, updated_at: new Date().toISOString() }).eq('id', existing.id);
             } else {
                 await supabase.from('player_boxes').insert({
                     player_name: playerName,
                     visitor_id: getVisitorId(),
-                    operators
+                    operators,
+                    message
                 });
             }
             myBoxOperators = operators;
@@ -4336,14 +4338,40 @@ document.addEventListener('DOMContentLoaded', function() {
                     return `<span class="obox-op-tag">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}</span>`;
                 }).join('');
                 const dateStr = box.updated_at ? new Date(box.updated_at).toLocaleDateString('zh-CN') : '';
+                const comments = box.comments || [];
+                const savedName = localStorage.getItem('arknights_player_name') || '';
+
                 card.innerHTML = `
-                    <h4>${escapeHtml(box.player_name || '匿名博士')}</h4>
-                    <div class="obox-meta">${ops.length}名干员 · 更新于 ${dateStr}</div>
-                    <div class="obox-ops">${previewHtml}</div>
-                    ${ops.length > 10 ? `<div style="color:var(--text-muted);font-size:0.8rem;margin-top:6px">...等${ops.length}名干员</div>` : ''}
+                    <div class="obox-main" data-box-id="${box.id}">
+                        <h4>${escapeHtml(box.player_name || '匿名博士')}</h4>
+                        <div class="obox-meta">${ops.length}名干员 · 更新于 ${dateStr}</div>
+                        ${box.message ? `<div class="obox-message">&#128172; ${escapeHtml(box.message)}</div>` : ''}
+                        <div class="obox-ops">${previewHtml}</div>
+                        ${ops.length > 10 ? `<div style="color:var(--text-muted);font-size:0.8rem;margin-top:6px">...等${ops.length}名干员</div>` : ''}
+                    </div>
+                    <div class="obox-comments-section">
+                        <div class="obox-comments-toggle" data-box-comments-toggle="${box.id}">
+                            <span>&#128172; 评论 (${comments.length})</span>
+                            <span class="collapsible-arrow">&#9660;</span>
+                        </div>
+                        <div class="obox-comments-body">
+                            <div class="obox-comments-list" id="oboxComments_${box.id}">
+                                ${comments.length === 0 ? '<p style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:8px">暂无评论</p>' :
+                                    comments.map(c => `<div class="obox-comment"><strong>${escapeHtml(c.author || '匿名博士')}</strong> <small style="color:var(--text-muted)">${c.time ? new Date(c.time).toLocaleDateString('zh-CN') : ''}</small><div>${escapeHtml(c.text || '')}</div></div>`).join('')}
+                            </div>
+                            <div class="obox-comment-form">
+                                <input type="text" class="obox-comment-author" placeholder="你的名称" value="${escapeHtml(savedName)}" maxlength="20">
+                                <div style="display:flex;gap:6px;margin-top:6px;">
+                                    <input type="text" class="obox-comment-input" placeholder="写条评论..." maxlength="200">
+                                    <button class="obox-comment-submit" data-box-comment-submit="${box.id}" style="padding:6px 14px;border:1px solid var(--accent-gold);border-radius:6px;background:rgba(255,215,0,0.1);color:var(--accent-gold);cursor:pointer;font-family:inherit;font-size:0.8rem;white-space:nowrap;">发送</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
                 // 点击展开完整Box
-                card.addEventListener('click', function() {
+                card.querySelector('.obox-main').addEventListener('click', function(e) {
+                    if (e.target.closest('.obox-comments-section')) return;
                     if (card.querySelector('.other-box-detail-ops')) {
                         card.querySelector('.other-box-detail-ops').remove();
                         return;
@@ -4354,7 +4382,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         const url = avatarMap[name];
                         detailDiv.innerHTML += `<div class="other-box-detail-op">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}</div>`;
                     });
-                    card.appendChild(detailDiv);
+                    this.after(detailDiv);
+                });
+                // 评论折叠/展开
+                const commentToggle = card.querySelector('.obox-comments-toggle');
+                const commentBody = card.querySelector('.obox-comments-body');
+                commentToggle?.addEventListener('click', function() {
+                    this.classList.toggle('collapsed-toggle');
+                    commentBody.classList.toggle('collapsed-body');
+                    const arrow = this.querySelector('.collapsible-arrow');
+                    if (arrow) arrow.style.transform = commentBody.classList.contains('collapsed-body') ? 'rotate(-90deg)' : '';
                 });
                 list.appendChild(card);
             });
@@ -4362,6 +4399,33 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('[OtherBoxes] 加载失败:', e);
         }
     }
+
+    // 提交Box评论（事件委托）
+    document.addEventListener('click', async function(e) {
+        const submitBtn = e.target.closest('[data-box-comment-submit]');
+        if (!submitBtn) return;
+        const boxId = submitBtn.dataset.boxCommentSubmit;
+        const card = submitBtn.closest('.other-box-card');
+        if (!card || !boxId || !supabase) return;
+        const author = card.querySelector('.obox-comment-author')?.value?.trim() || '匿名博士';
+        const text = card.querySelector('.obox-comment-input')?.value?.trim() || '';
+        if (!text) { alert('请输入评论内容'); return; }
+        try {
+            const { data: row } = await supabase
+                .from('player_boxes')
+                .select('comments')
+                .eq('id', boxId)
+                .single();
+            const comments = row?.comments || [];
+            comments.push({ author, text, time: new Date().toISOString() });
+            await supabase.from('player_boxes').update({ comments }).eq('id', boxId);
+            card.querySelector('.obox-comment-input').value = '';
+            loadOtherBoxes();
+        } catch (err) {
+            console.error('评论失败:', err);
+            alert('评论发送失败');
+        }
+    });
 
     document.querySelectorAll('[data-open-page="mybox"]').forEach(btn => {
         btn.addEventListener('click', async function() {
