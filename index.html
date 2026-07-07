@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>明日方舟 - 大佬配队攻略</title>
-    <link rel="stylesheet" href="style.css?v=94">
+    <link rel="stylesheet" href="style.css?v=95">
 </head>
 <body>
     <!-- 全局返回导航 -->
@@ -4354,12 +4354,42 @@
                     <input type="text" id="playerNameInput" placeholder="你的博士名称" maxlength="20" style="padding:6px 12px;border:1px solid var(--border-color);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:0.85rem;width:140px;">
                     <button class="atlas-back-btn" type="button" id="saveMyBoxBtn">保存Box</button>
                     <button class="atlas-back-btn" type="button" id="aiSquadBtn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:#8b5cf6;color:#fff;">&#129302; AI配队</button>
+                    <button class="atlas-back-btn" type="button" id="screenshotImportBtn" style="background:linear-gradient(135deg,#10b981,#059669);border-color:#059669;color:#fff;">&#128247; 截图导入</button>
                     <button class="atlas-back-btn" type="button" id="publishBoxHelpBtn">发布求助</button>
                     <button class="atlas-back-btn" type="button" data-close-page="mybox">返回首页</button>
                 </div>
             </div>
             <h2 class="section-title"><span class="icon">&#128230;</span>我的Box</h2>
             <p class="section-desc">勾选你拥有的干员，保存后可一键发布求助让其他博士帮你编队</p>
+
+            <!-- 截图导入面板 -->
+            <div class="screenshot-import-panel" id="screenshotImportPanel" hidden>
+                <h3 style="color:var(--accent-gold);margin-bottom:10px;font-size:1rem;">&#128247; 截图导入Box</h3>
+                <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:10px;">上传游戏内Box/干员列表截图，AI自动识别干员名字</p>
+                <div class="screenshot-upload-area" id="screenshotUploadArea">
+                    <input type="file" id="screenshotInput" accept="image/*" hidden>
+                    <div class="screenshot-dropzone" id="screenshotDropzone">
+                        <div style="font-size:2rem;margin-bottom:8px;">&#128228;</div>
+                        <div>点击上传或拖拽截图到此处</div>
+                        <div style="color:var(--text-muted);font-size:0.75rem;margin-top:6px;">支持游戏内Box截图、干员列表截图</div>
+                    </div>
+                </div>
+                <div class="screenshot-preview" id="screenshotPreview" hidden>
+                    <img id="screenshotPreviewImg" alt="预览">
+                    <div class="screenshot-ocr-status" id="screenshotOcrStatus">
+                        <span class="ocr-spinner"></span>
+                        <span id="screenshotOcrText">正在识别...</span>
+                    </div>
+                </div>
+                <div class="screenshot-results" id="screenshotResults" hidden>
+                    <h4 style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:8px;">识别结果（点击可移除）</h4>
+                    <div class="screenshot-matched-ops" id="screenshotMatchedOps"></div>
+                    <div style="display:flex;gap:10px;margin-top:12px;">
+                        <button type="button" class="publish-btn" id="screenshotConfirmBtn">确认导入</button>
+                        <button type="button" class="atlas-back-btn" id="screenshotCancelBtn">取消</button>
+                    </div>
+                </div>
+            </div>
 
             <div class="box-controls">
                 <input type="text" class="box-search" id="boxSearch" placeholder="搜索干员名字...">
@@ -4641,8 +4671,9 @@
 
     <script src="operator_modules.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="operator_skills.js?v=14"></script>
-    <script src="script.js?v=94"></script>
+    <script src="script.js?v=95"></script>
 </body>
 </html>
 

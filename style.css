@@ -3988,6 +3988,107 @@ body.page-open #atlas-entry {
     border-radius: 4px;
 }
 
+/* ========== 截图导入 ========== */
+.screenshot-import-panel {
+    margin: 15px 0;
+    padding: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+.screenshot-dropzone {
+    padding: 30px 20px;
+    background: var(--bg-primary);
+    border: 2px dashed var(--border-color);
+    border-radius: 10px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.screenshot-dropzone:hover {
+    border-color: var(--accent-cyan);
+    background: rgba(0, 200, 255, 0.03);
+}
+.screenshot-dropzone.dragover {
+    border-color: var(--accent-gold);
+    background: rgba(255, 215, 0, 0.05);
+}
+.screenshot-preview {
+    margin-top: 12px;
+    text-align: center;
+}
+.screenshot-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+.screenshot-ocr-status {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+.ocr-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: ocr-spin 1s linear infinite;
+}
+@keyframes ocr-spin {
+    to { transform: rotate(360deg); }
+}
+.screenshot-results {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+}
+.screenshot-matched-ops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.screenshot-matched-ops .sm-op {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.screenshot-matched-ops .sm-op:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+.screenshot-matched-ops .sm-op img {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+}
+.screenshot-matched-ops .sm-op.removed {
+    opacity: 0.4;
+    text-decoration: line-through;
+    border-color: var(--border-color);
+}
+
 /* ========== AI配队结果 ========== */
 .ai-squad-result {
     margin-top: 20px;

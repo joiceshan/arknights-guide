@@ -3519,6 +3519,201 @@ document.addEventListener('DOMContentLoaded', function() {
         updateMyBoxSummary();
     }
 
+    // ========== 截图导入Box ==========
+    let screenshotMatchedOps = [];
+
+    function initScreenshotImport() {
+        const btn = document.getElementById('screenshotImportBtn');
+        const panel = document.getElementById('screenshotImportPanel');
+        const input = document.getElementById('screenshotInput');
+        const dropzone = document.getElementById('screenshotDropzone');
+        const preview = document.getElementById('screenshotPreview');
+        const previewImg = document.getElementById('screenshotPreviewImg');
+        const ocrStatus = document.getElementById('screenshotOcrStatus');
+        const results = document.getElementById('screenshotResults');
+        const matchedOpsEl = document.getElementById('screenshotMatchedOps');
+        const confirmBtn = document.getElementById('screenshotConfirmBtn');
+        const cancelBtn = document.getElementById('screenshotCancelBtn');
+        const uploadArea = document.getElementById('screenshotUploadArea');
+
+        if (!btn || !panel) return;
+
+        // 切换面板显示
+        btn.addEventListener('click', function() {
+            panel.hidden = !panel.hidden;
+            if (!panel.hidden) {
+                // 重置状态
+                input.value = '';
+                preview.hidden = true;
+                results.hidden = true;
+                uploadArea.hidden = false;
+                screenshotMatchedOps = [];
+            }
+        });
+
+        // 点击上传
+        dropzone?.addEventListener('click', function() {
+            input?.click();
+        });
+
+        // 文件选择
+        input?.addEventListener('change', function() {
+            if (input.files && input.files[0]) {
+                handleScreenshotFile(input.files[0]);
+            }
+        });
+
+        // 拖拽上传
+        dropzone?.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        dropzone?.addEventListener('dragleave', function() {
+            dropzone.classList.remove('dragover');
+        });
+        dropzone?.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleScreenshotFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // 确认导入
+        confirmBtn?.addEventListener('click', function() {
+            const activeOps = screenshotMatchedOps.filter(op => !op.removed).map(op => op.name);
+            if (activeOps.length === 0) { alert('没有可导入的干员'); return; }
+            // 合并到myBoxOperators（去重）
+            activeOps.forEach(name => {
+                if (!myBoxOperators.includes(name)) {
+                    myBoxOperators.push(name);
+                }
+            });
+            renderBoxOperators();
+            updateMyBoxSummary();
+            panel.hidden = true;
+            alert('成功导入 ' + activeOps.length + ' 名干员到Box！');
+        });
+
+        // 取消
+        cancelBtn?.addEventListener('click', function() {
+            panel.hidden = true;
+            screenshotMatchedOps = [];
+        });
+
+        async function handleScreenshotFile(file) {
+            if (!file.type.startsWith('image/')) { alert('请上传图片文件'); return; }
+
+            uploadArea.hidden = true;
+            preview.hidden = false;
+            results.hidden = true;
+
+            // 显示预览
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+            // OCR识别
+            ocrStatus.style.display = 'flex';
+            document.getElementById('screenshotOcrText').textContent = '正在加载OCR引擎（首次约10MB）...';
+
+            try {
+                if (typeof Tesseract === 'undefined') {
+                    throw new Error('OCR引擎未加载，请刷新页面重试');
+                }
+
+                const worker = await Tesseract.createWorker('chi_sim');
+                document.getElementById('screenshotOcrText').textContent = '正在识别文字...';
+                const { data: { text } } = await worker.recognize(file);
+                await worker.terminate();
+
+                // 匹配干员名字
+                const recognizedNames = matchOperatorNames(text);
+                screenshotMatchedOps = recognizedNames.map(name => ({ name, removed: false }));
+
+                ocrStatus.style.display = 'none';
+
+                if (screenshotMatchedOps.length === 0) {
+                    alert('未能识别出干员名字，请确保截图清晰且包含干员名字');
+                    uploadArea.hidden = false;
+                    preview.hidden = true;
+                    return;
+                }
+
+                // 显示结果
+                results.hidden = false;
+                renderMatchedOps();
+            } catch (err) {
+                console.error('OCR失败:', err);
+                ocrStatus.style.display = 'none';
+                alert('识别失败: ' + (err.message || '未知错误'));
+                uploadArea.hidden = false;
+                preview.hidden = true;
+            }
+        }
+
+        function matchOperatorNames(ocrText) {
+            const allOps = getAllOperatorsFromDOM();
+            const opNames = allOps.map(op => op.name);
+            const recognized = new Set();
+
+            // 清洗OCR文本：去除空格、换行、特殊字符
+            const cleanText = ocrText.replace(/\s+/g, '').replace(/[\n\r]/g, '');
+
+            // 精确匹配
+            opNames.forEach(name => {
+                if (cleanText.includes(name)) {
+                    recognized.add(name);
+                }
+            });
+
+            // 模糊匹配（处理OCR常见错误）
+            opNames.forEach(name => {
+                if (recognized.has(name)) return;
+                // 检查相似度：逐字符匹配
+                for (let i = 0; i <= cleanText.length - name.length; i++) {
+                    const substr = cleanText.substring(i, i + name.length);
+                    if (similarity(substr, name) >= 0.75) {
+                        recognized.add(name);
+                        break;
+                    }
+                }
+            });
+
+            return Array.from(recognized);
+        }
+
+        function similarity(a, b) {
+            if (a.length !== b.length) return 0;
+            let match = 0;
+            for (let i = 0; i < a.length; i++) {
+                if (a[i] === b[i]) match++;
+            }
+            return match / a.length;
+        }
+
+        function renderMatchedOps() {
+            matchedOpsEl.innerHTML = '';
+            const avatarMap = buildAvatarMap();
+            screenshotMatchedOps.forEach((op, idx) => {
+                const el = document.createElement('div');
+                el.className = 'sm-op' + (op.removed ? ' removed' : '');
+                const url = avatarMap[op.name];
+                el.innerHTML = (url ? `<img src="${url}" alt="${escapeHtml(op.name)}" onerror="this.style.display='none'">` : '') + escapeHtml(op.name);
+                el.addEventListener('click', function() {
+                    op.removed = !op.removed;
+                    el.classList.toggle('removed');
+                });
+                matchedOpsEl.appendChild(el);
+            });
+        }
+    }
+
+    // 初始化截图导入
+    initScreenshotImport();
+
     function updateMyBoxSummary() {
         const opsEl = document.getElementById('myboxSummaryOps');
         const countEl = document.getElementById('myboxSummaryCount');
