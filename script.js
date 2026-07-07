@@ -3876,6 +3876,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const section = document.getElementById('aiSquadResult');
         if (!container || !section) return;
         section.removeAttribute('hidden');
+        section.classList.remove('collapsed');
 
         // 渲染Box分析
         let html = '<div class="ai-scan-info">';
@@ -4440,11 +4441,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!boxId || !supabase) return;
         if (!confirm('确定删除此Box？此操作不可恢复')) return;
         try {
-            await supabase.from('player_boxes').delete().eq('id', boxId);
-            loadOtherBoxes();
+            const { error } = await supabase.from('player_boxes').delete().eq('id', boxId);
+            if (error) {
+                console.error('删除Box失败:', error);
+                alert('删除失败: ' + (error.message || '权限不足，请检查RLS策略'));
+                return;
+            }
+            await loadOtherBoxes();
         } catch (err) {
             console.error('删除Box失败:', err);
-            alert('删除失败');
+            alert('删除失败: ' + (err.message || '未知错误'));
         }
     });
 
