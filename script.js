@@ -4313,7 +4313,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const { data, error } = await supabase
                 .from('player_boxes')
-                .select('*')
+                .select('id,visitor_id,player_name,operators,updated_at,message,comments')
                 .neq('visitor_id', getVisitorId())
                 .order('updated_at', { ascending: false })
                 .limit(20);
@@ -4341,9 +4341,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const comments = box.comments || [];
                 const savedName = localStorage.getItem('arknights_player_name') || '';
 
+                const canDeleteBox = isAdmin();
                 card.innerHTML = `
                     <div class="obox-main" data-box-id="${box.id}">
-                        <h4>${escapeHtml(box.player_name || '匿名博士')}</h4>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <h4>${escapeHtml(box.player_name || '匿名博士')}</h4>
+                            ${canDeleteBox ? `<button class="comm-delete-btn" data-delete-box="${box.id}" title="删除此Box">&#128465;</button>` : ''}
+                        </div>
                         <div class="obox-meta">${ops.length}名干员 · 更新于 ${dateStr}</div>
                         ${box.message ? `<div class="obox-message">&#128172; ${escapeHtml(box.message)}</div>` : ''}
                         <div class="obox-ops">${previewHtml}</div>
@@ -4423,7 +4427,24 @@ document.addEventListener('DOMContentLoaded', function() {
             loadOtherBoxes();
         } catch (err) {
             console.error('评论失败:', err);
-            alert('评论发送失败');
+            alert('评论发送失败：' + (err.message || '请确认Supabase player_boxes表有comments字段'));
+        }
+    });
+
+    // 管理员删除Box
+    document.addEventListener('click', async function(e) {
+        const delBtn = e.target.closest('[data-delete-box]');
+        if (!delBtn) return;
+        if (!isAdmin()) { alert('只有管理员可以删除'); return; }
+        const boxId = delBtn.dataset.deleteBox;
+        if (!boxId || !supabase) return;
+        if (!confirm('确定删除此Box？此操作不可恢复')) return;
+        try {
+            await supabase.from('player_boxes').delete().eq('id', boxId);
+            loadOtherBoxes();
+        } catch (err) {
+            console.error('删除Box失败:', err);
+            alert('删除失败');
         }
     });
 
