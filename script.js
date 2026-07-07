@@ -4357,9 +4357,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="obox-comments-section">
                         <div class="obox-comments-toggle" data-box-comments-toggle="${box.id}">
                             <span>&#128172; 评论 (${comments.length})</span>
-                            <span class="collapsible-arrow">&#9660;</span>
+                            <span class="collapsible-arrow" style="transform:rotate(-90deg)">&#9660;</span>
                         </div>
-                        <div class="obox-comments-body">
+                        <div class="obox-comments-body collapsed-body">
                             <div class="obox-comments-list" id="oboxComments_${box.id}">
                                 ${comments.length === 0 ? '<p style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:8px">暂无评论</p>' :
                                     comments.map(c => `<div class="obox-comment"><strong>${escapeHtml(c.author || '匿名博士')}</strong> <small style="color:var(--text-muted)">${c.time ? new Date(c.time).toLocaleDateString('zh-CN') : ''}</small><div>${escapeHtml(c.text || '')}</div></div>`).join('')}
@@ -4441,11 +4441,37 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!boxId || !supabase) return;
         if (!confirm('确定删除此Box？此操作不可恢复')) return;
         try {
-            const { error } = await supabase.from('player_boxes').delete().eq('id', boxId);
+            const { error, count } = await supabase
+                .from('player_boxes')
+                .delete({ count: 'exact' })
+                .eq('id', boxId);
+            console.log('[Delete Box] result:', { error, count });
             if (error) {
                 console.error('删除Box失败:', error);
-                alert('删除失败: ' + (error.message || '权限不足，请检查RLS策略'));
+                alert('删除失败: ' + (error.message || '权限不足'));
                 return;
+            }
+            if (count === 0) {
+                alert('未找到该记录（可能已被删除）');
+                await loadOtherBoxes();
+                return;
+            }
+            // 从DOM立即移除卡片
+            const card = delBtn.closest('.other-box-card');
+            if (card) {
+                card.style.transition = 'opacity 0.3s, max-height 0.3s';
+                card.style.opacity = '0';
+                card.style.maxHeight = '0';
+                card.style.overflow = 'hidden';
+                setTimeout(() => {
+                    card.remove();
+                    // 检查列表是否为空
+                    const list = document.getElementById('otherBoxesList');
+                    if (list && list.children.length === 0) {
+                        const section = document.getElementById('otherBoxesSection');
+                        if (section) section.setAttribute('hidden', '');
+                    }
+                }, 300);
             }
             await loadOtherBoxes();
         } catch (err) {
