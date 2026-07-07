@@ -4492,5 +4492,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (nameInput) nameInput.value = savedName;
     }
 
+    // ========== 折叠组件 ==========
+    document.querySelectorAll('.collapsible-header[data-toggle]').forEach(header => {
+        header.addEventListener('click', function() {
+            const targetId = this.dataset.toggle;
+            const section = document.getElementById(targetId);
+            if (section) {
+                section.classList.toggle('collapsed');
+            }
+        });
+    });
+
     updateAdminUI();
 });

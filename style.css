@@ -3988,6 +3988,48 @@ body.page-open #atlas-entry {
     border-radius: 4px;
 }
 
+/* ========== 折叠组件 ========== */
+.collapsible-section {
+    margin: 12px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: background 0.2s;
+}
+.collapsible-header:hover {
+    background: var(--bg-primary);
+}
+.collapsible-arrow {
+    font-size: 0.7rem;
+    transition: transform 0.3s;
+    color: var(--text-muted);
+}
+.collapsible-section.collapsed .collapsible-arrow {
+    transform: rotate(-90deg);
+}
+.collapsible-body {
+    padding: 12px;
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
+.collapsible-section.collapsed .collapsible-body {
+    max-height: 0 !important;
+    padding: 0 12px;
+    overflow: hidden;
+}
+
 /* ========== 截图导入 ========== */
 .screenshot-import-panel {
     margin: 15px 0;
