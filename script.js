@@ -3401,7 +3401,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const { data, error } = await supabase
                 .from('player_boxes')
-                .select('operators, player_name')
+                .select('*')
                 .eq('visitor_id', getVisitorId())
                 .maybeSingle();
             if (error) throw error;
@@ -4313,7 +4313,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const { data, error } = await supabase
                 .from('player_boxes')
-                .select('id,visitor_id,player_name,operators,updated_at,message,comments')
+                .select('*')
                 .neq('visitor_id', getVisitorId())
                 .order('updated_at', { ascending: false })
                 .limit(20);
