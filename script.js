@@ -3413,8 +3413,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (nameInput && !nameInput.value) nameInput.value = data.player_name;
             }
         } catch (e) {
-            console.error('[Box] 加载失败:', e);
-            myBoxOperators = [];
+            console.error('[Box] 云端加载失败，尝试本地恢复:', e);
+            // 从 localStorage 恢复
+            try {
+                const localBox = JSON.parse(localStorage.getItem('arknights_my_box') || '[]');
+                const localTraining = JSON.parse(localStorage.getItem('arknights_my_training') || '{}');
+                if (localBox.length > 0) {
+                    myBoxOperators = localBox;
+                    myBoxTraining = localTraining;
+                }
+            } catch (_) {}
         }
     }
 
@@ -3431,20 +3439,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 .eq('visitor_id', getVisitorId())
                 .maybeSingle();
             if (existing) {
-                await supabase.from('player_boxes').update({ operators, player_name: playerName, message, training: myBoxTraining, updated_at: new Date().toISOString() }).eq('id', existing.id);
+                const { error } = await supabase.from('player_boxes').update({ operators, player_name: playerName, message, training: myBoxTraining, updated_at: new Date().toISOString() }).eq('id', existing.id);
+                if (error) {
+                    // 如果 training 列不存在，回退到不带 training 的更新
+                    console.warn('[Box] 带training保存失败，回退:', error.message);
+                    const { error: e2 } = await supabase.from('player_boxes').update({ operators, player_name: playerName, message, updated_at: new Date().toISOString() }).eq('id', existing.id);
+                    if (e2) throw e2;
+                }
             } else {
-                await supabase.from('player_boxes').insert({
+                const { error } = await supabase.from('player_boxes').insert({
                     player_name: playerName,
                     visitor_id: getVisitorId(),
                     operators,
                     message,
                     training: myBoxTraining
                 });
+                if (error) {
+                    console.warn('[Box] 带training保存失败，回退:', error.message);
+                    const { error: e2 } = await supabase.from('player_boxes').insert({
+                        player_name: playerName,
+                        visitor_id: getVisitorId(),
+                        operators,
+                        message
+                    });
+                    if (e2) throw e2;
+                }
             }
             myBoxOperators = operators;
+            // 同时保存到 localStorage 作为本地备份
+            localStorage.setItem('arknights_my_box', JSON.stringify(operators));
+            localStorage.setItem('arknights_my_training', JSON.stringify(myBoxTraining));
             return true;
         } catch (e) {
             console.error('[Box] 保存失败:', e);
+            // 即使云端失败，也保存到本地
+            localStorage.setItem('arknights_my_box', JSON.stringify(operators));
+            localStorage.setItem('arknights_my_training', JSON.stringify(myBoxTraining));
+            alert('云端保存失败: ' + (e.message || '未知错误') + '\n已保存到本地浏览器');
             return false;
         }
     }
