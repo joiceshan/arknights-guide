@@ -3384,6 +3384,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ========== 我的Box & Box求助 ==========
     let myBoxOperators = [];
+    let myBoxTraining = {}; // {operatorName: {phase: 0|1|2, mastery: [s1,s2,s3]}}
     let currentBoxFilter = 'all';
     let currentBoxRequestId = null;
 
@@ -3406,6 +3407,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .maybeSingle();
             if (error) throw error;
             myBoxOperators = (data && data.operators) || [];
+            myBoxTraining = (data && data.training) || {};
             if (data && data.player_name) {
                 const nameInput = document.getElementById('playerNameInput');
                 if (nameInput && !nameInput.value) nameInput.value = data.player_name;
@@ -3429,13 +3431,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 .eq('visitor_id', getVisitorId())
                 .maybeSingle();
             if (existing) {
-                await supabase.from('player_boxes').update({ operators, player_name: playerName, message, updated_at: new Date().toISOString() }).eq('id', existing.id);
+                await supabase.from('player_boxes').update({ operators, player_name: playerName, message, training: myBoxTraining, updated_at: new Date().toISOString() }).eq('id', existing.id);
             } else {
                 await supabase.from('player_boxes').insert({
                     player_name: playerName,
                     visitor_id: getVisitorId(),
                     operators,
-                    message
+                    message,
+                    training: myBoxTraining
                 });
             }
             myBoxOperators = operators;
@@ -3489,25 +3492,89 @@ document.addEventListener('DOMContentLoaded', function() {
         const avatarMap = buildAvatarMap();
         filtered.forEach(op => {
             const el = document.createElement('div');
-            el.className = 'box-op-item' + (myBoxOperators.includes(op.name) ? ' selected' : '');
+            const isSelected = myBoxOperators.includes(op.name);
+            el.className = 'box-op-item' + (isSelected ? ' selected' : '');
             el.dataset.name = op.name;
             const avatarUrl = avatarMap[op.name];
             const starsHtml = '&#9733;'.repeat(rarityNum(op.rarity));
+            const training = myBoxTraining[op.name];
+            const phase = training ? training.phase : 0;
+            const phaseLabel = phase === 2 ? '精2' : phase === 1 ? '精1' : '';
             el.innerHTML = `
                 <img src="${avatarUrl || ''}" alt="${escapeHtml(op.name)}" onerror="this.style.display='none'" loading="lazy">
                 <span class="box-op-name">${escapeHtml(op.name)}</span>
                 <span class="box-op-stars">${starsHtml}</span>
+                ${phaseLabel ? `<span class="box-op-phase phase-${phase}">${phaseLabel}</span>` : ''}
+                ${isSelected ? `<div class="box-op-training" style="display:none;">
+                    <button class="training-btn ${phase===0?'active':''}" data-phase="0">精0</button>
+                    <button class="training-btn ${phase===1?'active':''}" data-phase="1">精1</button>
+                    <button class="training-btn ${phase===2?'active':''}" data-phase="2">精2</button>
+                </div>` : ''}
             `;
-            el.addEventListener('click', function() {
+            el.addEventListener('click', function(e) {
+                // 如果点击的是练度按钮，不触发选择/取消
+                if (e.target.classList.contains('training-btn')) {
+                    e.stopPropagation();
+                    const newPhase = parseInt(e.target.dataset.phase);
+                    if (!myBoxTraining[op.name]) myBoxTraining[op.name] = { phase: 0 };
+                    myBoxTraining[op.name].phase = newPhase;
+                    // 更新UI
+                    el.querySelectorAll('.training-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    // 更新角标
+                    const phaseEl = el.querySelector('.box-op-phase');
+                    const label = newPhase === 2 ? '精2' : newPhase === 1 ? '精1' : '';
+                    if (label) {
+                        if (phaseEl) {
+                            phaseEl.textContent = label;
+                            phaseEl.className = 'box-op-phase phase-' + newPhase;
+                        } else {
+                            const span = document.createElement('span');
+                            span.className = 'box-op-phase phase-' + newPhase;
+                            span.textContent = label;
+                            el.querySelector('.box-op-stars').after(span);
+                        }
+                    } else if (phaseEl) {
+                        phaseEl.remove();
+                    }
+                    updateMyBoxSummary();
+                    return;
+                }
                 if (myBoxOperators.includes(op.name)) {
                     myBoxOperators = myBoxOperators.filter(n => n !== op.name);
+                    delete myBoxTraining[op.name];
                     el.classList.remove('selected');
+                    const trainingDiv = el.querySelector('.box-op-training');
+                    if (trainingDiv) trainingDiv.remove();
+                    const phaseEl = el.querySelector('.box-op-phase');
+                    if (phaseEl) phaseEl.remove();
                 } else {
                     myBoxOperators.push(op.name);
+                    if (!myBoxTraining[op.name]) myBoxTraining[op.name] = { phase: 0 };
                     el.classList.add('selected');
+                    // 添加练度选择器
+                    const trainingDiv = document.createElement('div');
+                    trainingDiv.className = 'box-op-training';
+                    trainingDiv.innerHTML = `
+                        <button class="training-btn active" data-phase="0">精0</button>
+                        <button class="training-btn" data-phase="1">精1</button>
+                        <button class="training-btn" data-phase="2">精2</button>
+                    `;
+                    el.appendChild(trainingDiv);
                 }
                 updateBoxCount();
             });
+            // 鼠标悬停显示练度选择器
+            if (isSelected) {
+                el.addEventListener('mouseenter', function() {
+                    const td = el.querySelector('.box-op-training');
+                    if (td) td.style.display = 'flex';
+                });
+                el.addEventListener('mouseleave', function() {
+                    const td = el.querySelector('.box-op-training');
+                    if (td) td.style.display = 'none';
+                });
+            }
             grid.appendChild(el);
         });
         updateBoxCount();
@@ -3730,9 +3797,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const avatarMap = buildAvatarMap();
         myBoxOperators.forEach(name => {
             const url = avatarMap[name];
+            const training = myBoxTraining[name];
+            const phase = training ? training.phase : 0;
+            const phaseLabel = phase === 2 ? '精2' : phase === 1 ? '精1' : '';
+            const phaseClass = phase === 2 ? 'ms-phase-2' : phase === 1 ? 'ms-phase-1' : '';
             const el = document.createElement('div');
             el.className = 'ms-op';
-            el.innerHTML = `${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}`;
+            el.innerHTML = `${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}${phaseLabel ? `<span class="ms-phase ${phaseClass}">${phaseLabel}</span>` : ''}`;
             opsEl.appendChild(el);
         });
     }
@@ -3764,8 +3835,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const results = [];
         const r = rarityNum.bind(null);
 
-        // 按星级降序排序
-        boxData.sort((a, b) => r(b.rarity) - r(a.rarity));
+        // 按星级降序+练度排序（精2 > 精1 > 精0）
+        boxData.sort((a, b) => {
+            const ra = r(b.rarity), rb = r(a.rarity);
+            if (ra !== rb) return rb - ra;
+            const ta = myBoxTraining[a.name] ? myBoxTraining[a.name].phase : 0;
+            const tb = myBoxTraining[b.name] ? myBoxTraining[b.name].phase : 0;
+            return tb - ta;
+        });
 
         // 分析Box特点
         const classCount = {};
@@ -4333,10 +4410,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const card = document.createElement('div');
                 card.className = 'other-box-card';
                 const ops = box.operators || [];
+                const training = box.training || {};
                 const previewNames = ops.slice(0, 10);
                 const previewHtml = previewNames.map(name => {
                     const url = avatarMap[name];
-                    return `<span class="obox-op-tag">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}</span>`;
+                    const t = training[name];
+                    const phase = t ? t.phase : 0;
+                    const phaseLabel = phase === 2 ? '精2' : phase === 1 ? '精1' : '';
+                    const phaseClass = phase === 2 ? 'ms-phase-2' : phase === 1 ? 'ms-phase-1' : '';
+                    return `<span class="obox-op-tag">${url ? `<img src="${url}" alt="${escapeHtml(name)}" onerror="this.style.display='none'">` : ''}${escapeHtml(name)}${phaseLabel ? `<span class="ms-phase ${phaseClass}">${phaseLabel}</span>` : ''}</span>`;
                 }).join('');
                 const dateStr = box.updated_at ? new Date(box.updated_at).toLocaleDateString('zh-CN') : '';
                 const comments = box.comments || [];
