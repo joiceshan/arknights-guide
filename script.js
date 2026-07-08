@@ -3809,6 +3809,61 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ========== AI配队算法 ==========
+
+    // 低星战神/四星战神列表 - 这些干员虽然星级低但性价比极高，不应被高星压制
+    const LOW_STAR_GODS = {
+        '桃金娘': 6.5, '苏苏洛': 6.0, '孑': 6.0, '坚雷': 6.0, '白雪': 6.0,
+        '松果': 6.0, '宴': 6.0, '芳汀': 5.5, '刻刀': 5.5, '红豆': 5.5,
+        '蛇屠箱': 5.5, '古米': 5.5, '砾': 5.0, '斑点': 4.5,
+        '安塞尔': 4.0, '克洛丝': 4.5, '玫兰莎': 5.0, '芬': 4.0,
+        '史都华德': 4.5, '梓兰': 4.0, '暗索': 4.5, '阿消': 4.5,
+        '伊桑': 5.5, '狮蝎': 5.5
+    };
+
+    // 幻神/真神级干员 - 这些6星是版本T0，选人时应额外加权
+    const TOP_TIER_GODS = {
+        '伊内丝': 7, 'Logos': 7, '维什戴尔': 7, '锏': 7,
+        '史尔特尔': 7, '玛恩纳': 7, '银灰': 6.8, '棘刺': 6.8,
+        '伊芙利特': 6.8, '艾雅法拉': 6.8, '塞雷娅': 7, '夜莺': 6.8,
+        '纯烬艾雅法拉': 6.8, '能天使': 6.5, '假日威龙陈': 6.5,
+        '风笛': 6.5, '泥岩': 6.5, '山': 6.5, '铃兰': 6.5,
+        '缄默德克萨斯': 6.5, '水月': 6.5, '煌': 6.3, '耀骑士临光': 6.5,
+        '黍': 6.8
+    };
+
+    // 关键标签权重 - 配队时这些标签很重要
+    const TAG_WEIGHTS = {
+        '费用回复': 15, '治疗': 12, '群攻': 10, '快速复活': 8,
+        '控场': 8, '减速': 7, '爆发输出': 10, '生存': 8,
+        '支援': 8, '输出': 6, '削弱': 7, '召唤': 5,
+        '对空': 5, '远程': 4, '支援机械': 3
+    };
+
+    function getOpPowerScore(op) {
+        // 综合评分 = 星级基础分 + 练度加分 + 低星战神加成 + 幻神加成
+        const baseRarity = rarityNum(op.rarity);
+        let score = baseRarity * 1.0;
+
+        // 练度加分：精2 +1.5, 精1 +0.8
+        const training = myBoxTraining[op.name];
+        const phase = training ? training.phase : 0;
+        if (phase === 2) score += 1.5;
+        else if (phase === 1) score += 0.8;
+
+        // 低星战神加分 - 用战神分和原始分取max
+        if (LOW_STAR_GODS[op.name]) {
+            const godScore = LOW_STAR_GODS[op.name];
+            score = Math.max(score, godScore + (phase === 2 ? 1.0 : phase === 1 ? 0.5 : 0));
+        }
+
+        // 幻神加成
+        if (TOP_TIER_GODS[op.name]) {
+            score = Math.max(score, TOP_TIER_GODS[op.name]);
+        }
+
+        return score;
+    }
+
     function getBoxOperatorData() {
         const cards = document.querySelectorAll('.atlas-operator-card');
         const result = [];
@@ -3833,16 +3888,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (boxData.length < 6) return { error: '干员数量不足，至少需要6名干员' };
 
         const results = [];
-        const r = rarityNum.bind(null);
 
-        // 按星级降序+练度排序（精2 > 精1 > 精0）
-        boxData.sort((a, b) => {
-            const ra = r(b.rarity), rb = r(a.rarity);
-            if (ra !== rb) return rb - ra;
-            const ta = myBoxTraining[a.name] ? myBoxTraining[a.name].phase : 0;
-            const tb = myBoxTraining[b.name] ? myBoxTraining[b.name].phase : 0;
-            return tb - ta;
-        });
+        // 按综合战力排序（非纯星级）
+        boxData.sort((a, b) => getOpPowerScore(b) - getOpPowerScore(a));
 
         // 分析Box特点
         const classCount = {};
@@ -3851,28 +3899,28 @@ document.addEventListener('DOMContentLoaded', function() {
             classCount[op.cls] = (classCount[op.cls] || 0) + 1;
             op.tags.forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; });
         });
-        const star6 = boxData.filter(op => r(op.rarity) >= 6);
-        const star5 = boxData.filter(op => r(op.rarity) === 5);
+        const star6 = boxData.filter(op => rarityNum(op.rarity) >= 6);
+        const star5 = boxData.filter(op => rarityNum(op.rarity) === 5);
 
         // 通用推荐场景
         if (scene === 'general' || scene === 'all') {
-            results.push(buildTeam(boxData, classCount, tagCount, '通用均衡队', '先锋+近卫+重装+狙击+术师+医疗的均衡12人队，适合大部分关卡。优先选用高星干员和输出型干员。',
+            results.push(buildTeam(boxData, classCount, tagCount, '通用均衡队', '先锋+近卫+重装+狙击+术师+医疗的均衡12人队，适合大部分关卡。综合考虑干员练度、星级和实战价值。',
                 { vanguard: 2, guard: 3, defender: 2, sniper: 2, caster: 1, medic: 2 }, boxData));
             if (star6.length >= 8) {
-                results.push(buildTeam(boxData, classCount, tagCount, '精锐突击队', '以6星为核心的高练度突击编队，适合难度较高的主线关卡。',
+                results.push(buildTeam(boxData, classCount, tagCount, '精锐突击队', '以高战力干员为核心的突击编队，适合难度较高的主线关卡。优先考虑精二干员和版本强势干员。',
                     { vanguard: 2, guard: 4, defender: 1, sniper: 2, caster: 1, medic: 2 }, boxData));
             }
         }
 
         // 剿灭挂机
         if (scene === 'mop' || scene === 'all') {
-            results.push(buildTeam(boxData, classCount, tagCount, '剿灭挂机队', '以AOE输出为核心，配以费用回复和持续治疗，适合剿灭作战。',
+            results.push(buildTeam(boxData, classCount, tagCount, '剿灭挂机队', '以AOE输出为核心，配以费用回复和持续治疗，适合剿灭作战。群攻和爆发输出干员优先。',
                 { vanguard: 2, guard: 3, defender: 2, sniper: 2, caster: 1, medic: 2, preferTags: ['群攻', '爆发输出', '费用回复', '治疗', '支援'] }, boxData));
         }
 
         // 高难挑战
         if (scene === 'hard' || scene === 'all') {
-            results.push(buildTeam(boxData, classCount, tagCount, '高难攻坚队', '注重生存和持续输出，配备减速和控场干员，适合高难关卡。',
+            results.push(buildTeam(boxData, classCount, tagCount, '高难攻坚队', '注重生存和持续输出，配备减速和控场干员，适合高难关卡。快活特种和控场干员优先。',
                 { vanguard: 2, guard: 3, defender: 2, sniper: 2, caster: 1, medic: 2, preferTags: ['快速复活', '控场', '减速', '生存', '爆发输出', '支援'] }, boxData));
         }
 
@@ -3893,15 +3941,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function pickOp(cls, count, tagPriority) {
             let pool = boxData.filter(op => op.cls === cls && !selectedNames.has(op.name));
-            if (tagPriority && tagPriority.length > 0) {
-                pool.sort((a, b) => {
-                    const aScore = (tagPriority.filter(t => a.tags.includes(t)).length) * 10 + rarityNum(a.rarity);
-                    const bScore = (tagPriority.filter(t => b.tags.includes(t)).length) * 10 + rarityNum(b.rarity);
-                    return bScore - aScore;
-                });
-            } else {
-                pool.sort((a, b) => rarityNum(b.rarity) - rarityNum(a.rarity));
-            }
+            pool.sort((a, b) => {
+                let aScore = getOpPowerScore(a);
+                let bScore = getOpPowerScore(b);
+                if (tagPriority && tagPriority.length > 0) {
+                    aScore += tagPriority.filter(t => a.tags.includes(t)).reduce((sum, t) => sum + (TAG_WEIGHTS[t] || 5), 0);
+                    bScore += tagPriority.filter(t => b.tags.includes(t)).reduce((sum, t) => sum + (TAG_WEIGHTS[t] || 5), 0);
+                }
+                return bScore - aScore;
+            });
             const picked = pool.slice(0, count);
             picked.forEach(op => { selected.push(op); selectedNames.add(op.name); });
         }
@@ -3910,9 +3958,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (config.vanguard) {
             let vPool = boxData.filter(op => op.cls === '先锋' && !selectedNames.has(op.name));
             vPool.sort((a, b) => {
-                const aHasFR = a.tags.includes('费用回复') ? 100 : 0;
-                const bHasFR = b.tags.includes('费用回复') ? 100 : 0;
-                return (bHasFR + rarityNum(b.rarity)) - (aHasFR + rarityNum(a.rarity));
+                let aScore = getOpPowerScore(a) + (a.tags.includes('费用回复') ? TAG_WEIGHTS['费用回复'] : 0);
+                let bScore = getOpPowerScore(b) + (b.tags.includes('费用回复') ? TAG_WEIGHTS['费用回复'] : 0);
+                return bScore - aScore;
             });
             selected.push(...vPool.slice(0, config.vanguard));
             vPool.slice(0, config.vanguard).forEach(op => selectedNames.add(op.name));
@@ -3921,9 +3969,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (config.medic) {
             let mPool = boxData.filter(op => op.cls === '医疗' && !selectedNames.has(op.name));
             mPool.sort((a, b) => {
-                const aH = a.tags.includes('治疗') ? 100 : 0;
-                const bH = b.tags.includes('治疗') ? 100 : 0;
-                return (bH + rarityNum(b.rarity)) - (aH + rarityNum(a.rarity));
+                let aScore = getOpPowerScore(a) + (a.tags.includes('治疗') ? TAG_WEIGHTS['治疗'] : 0);
+                let bScore = getOpPowerScore(b) + (b.tags.includes('治疗') ? TAG_WEIGHTS['治疗'] : 0);
+                return bScore - aScore;
             });
             selected.push(...mPool.slice(0, config.medic));
             mPool.slice(0, config.medic).forEach(op => selectedNames.add(op.name));
@@ -3932,9 +3980,9 @@ document.addEventListener('DOMContentLoaded', function() {
         ['guard', 'defender', 'sniper', 'caster'].forEach(role => {
             if (config[role]) pickOp(classMap[role], config[role], preferTags);
         });
-        // 如果不够12人，从剩余干员中按星级补齐
+        // 如果不够12人，从剩余干员中按综合战力补齐
         if (selected.length < 12) {
-            const remaining = boxData.filter(op => !selectedNames.has(op.name)).sort((a, b) => rarityNum(b.rarity) - rarityNum(a.rarity));
+            const remaining = boxData.filter(op => !selectedNames.has(op.name)).sort((a, b) => getOpPowerScore(b) - getOpPowerScore(a));
             for (const op of remaining) {
                 if (selected.length >= 12) break;
                 selected.push(op);
@@ -3948,7 +3996,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return { name, desc, operators: selected.slice(0, 12), code };
     }
 
-    function renderAiResults(result) {
+    
+        function renderAiResults(result) {
         const container = document.getElementById('aiSquadCards');
         const section = document.getElementById('aiSquadResult');
         if (!container || !section) return;
